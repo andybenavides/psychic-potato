@@ -105,15 +105,15 @@ class Player extends PhysObj {
   void collide(float newx, float newy) {
     // Crossing left edge?
     if(newx - DIAMETER/2 < 0)
-      vx = abs(vx); // Force to positive
+      vx = 0; // Force to positive
     else if(newx + DIAMETER/2 >= width) // Right edge?
-      vx = -abs(vx); // Force to negative
+      vx = 0; // Force to negative
       
     // Crossing top edge?
     if(newy - DIAMETER/2 < 0)
-      vy = abs(vy); 
+      vy = 0; 
     else if(newy + DIAMETER/2 >= height) // Bottom edge?
-      vy = -abs(vy);
+      vy = 0;
   }
   
 }
@@ -322,7 +322,7 @@ void draw() {
   // Compute the duration of this frame, for use in the next.
   elapsed_time = System.nanoTime() - start_time;
   start_time = System.nanoTime();
-  println(elapsed_time);
+  //println(elapsed_time);
 }
 
 // When a key is depressed, we set the corresponding input acceleration on the player
@@ -332,30 +332,28 @@ void draw() {
 // unnecessary.)
 void keyPressed() {
   switch(keyCode) {
-    case LEFT:
+    case 'A':
       player.input_left = 1; break;
-    case RIGHT:
+    case 'D':
       player.input_right = 1; break;
-    case UP:
+    case 'W':
       player.input_up = 1; break;
-    case DOWN:
+    case 'S':
       player.input_down = 1; break;
     default: 
-      if(key == 's')
-        save("screenshot.png");
       break;
   }
 }
 
 void keyReleased() {
   switch(keyCode) {
-    case LEFT:
+    case 'A':
       player.input_left = 0; break;
-    case RIGHT:
+    case 'D':
       player.input_right = 0; break;
-    case UP:
+    case 'W':
       player.input_up = 0; break;
-    case DOWN:
+    case 'S':
       player.input_down = 0; break;
     default: 
       break;
