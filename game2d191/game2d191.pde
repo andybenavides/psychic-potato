@@ -13,6 +13,11 @@
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import ddf.minim.*;
+
+// using minim library creates song.
+Minim minim;
+AudioPlayer song;
 
 // The time at which the current frame started.
 long start_time = -1;
@@ -28,6 +33,9 @@ class PhysObj {
   // Is this object "alive"? Dead objects will not be processed and will be removed at the end of the current
   // frame.
   boolean alive = true;
+  
+  //Is this object the hero?
+  boolean Is_Hero = false;
   
   // These are intended to be (mostly) constant after initialization
   public int DIAMETER = 32;
@@ -62,7 +70,10 @@ class PhysObj {
   
   // Draw the object at its current location
   public void draw() {
-    if(alive) {
+    if(alive && Is_Hero) {
+      image (hero,x, y, hero.width/3.5, hero.height/3.5); // draw hero picture
+    }
+    else {
       fill(COLOR);
       ellipse(x,y,DIAMETER,DIAMETER); // Just a circle
     }
@@ -86,9 +97,14 @@ class Player extends PhysObj {
   
   float input_right, input_left, input_up, input_down;
   
+  // construction to make this object a hero
+   Player() {
+      Is_Hero = true;
+     }
+  
   // Acceleration is computed from input and friction
   public void accelerate(float dt) {
-
+    
     final float FRICTION = 0.01;
     float fx = -vx * FRICTION;
     float fy = -vy * FRICTION;
@@ -104,15 +120,15 @@ class Player extends PhysObj {
   // Handle collision with the edges of the window
   void collide(float newx, float newy) {
     // Crossing left edge?
-    if(newx - DIAMETER/2 < 0)
+    if(newx - DIAMETER/0.4 < 0)
       vx = 0; // Force to positive
-    else if(newx + DIAMETER/2 >= width) // Right edge?
+    else if(newx + DIAMETER/0.4 >= width) // Right edge?
       vx = 0; // Force to negative
       
     // Crossing top edge?
-    if(newy - DIAMETER/2 < 0)
+    if(newy - DIAMETER/0.32 < 0)
       vy = 0; 
-    else if(newy + DIAMETER/2 >= height) // Bottom edge?
+    else if(newy + DIAMETER/0.32 >= height) // Bottom edge?
       vy = 0;
   }
   
@@ -262,12 +278,28 @@ void spawn(PhysObj o) {
 // --------------------------------------------------------------------------------------------
 // Event handlers
 // --------------------------------------------------------------------------------------------
+
+// Image variable to store image.
+PImage r;
+PImage hero;
+
 void setup() {
-  size(812,512);
+  
+  // set up the background music using minim.
+  minim = new Minim(this);
+  song = minim.loadFile("theme.mp3");
+  song.play();
+  
+  size(1366,768);
   
   // Clearing the background here is not strictly necessary, as the game loop will do it at the
   // beginning of each frame anyway.
-  background(255); // White
+  //background(255); // White
+  
+  // load background and hero images.
+  r = loadImage ("room.png");
+  hero = loadImage ("ironman.png");
+  imageMode(CENTER);
   
   // Setup some other default drawing attributes
   fill(0);
@@ -292,8 +324,12 @@ void setup() {
 // that Processing defaults to a locked (maximum) framerate of 60 FPS, and also you may drop below 
 // this if you are doing something complicated in your draw() handler.
 void draw() {
+  
+  // draw the background picture r (pre-loaded).
+  background(r);
+  
   // Clear the display 
-  background(255);
+  //background(255);
   
   // Update all the objects, physically, based on the timestep from the previous frame.
   for(PhysObj o : entities) {
