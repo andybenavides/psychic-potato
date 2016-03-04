@@ -28,6 +28,12 @@ long elapsed_time;
 
 // Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
 // will only move with a fixed acceleration.
+void delay(int delay)
+{
+  int time = millis();
+  while(millis() - time <= delay);
+}
+
 class PhysObj {
   
   // Is this object "alive"? Dead objects will not be processed and will be removed at the end of the current
@@ -96,6 +102,9 @@ class PhysObj {
 class Player extends PhysObj {
   
   float input_right, input_left, input_up, input_down;
+  float heading;
+  float fx, fy;
+  boolean shooting = false; 
   
   // construction to make this object a hero
    Player() {
@@ -106,8 +115,8 @@ class Player extends PhysObj {
   public void accelerate(float dt) {
     
     final float FRICTION = 0.01;
-    float fx = -vx * FRICTION;
-    float fy = -vy * FRICTION;
+    fx = -vx * FRICTION;
+    fy = -vy * FRICTION;
     
     final float INPUT_ACCEL = 0.004;
     float input_ax = (input_right - input_left) * INPUT_ACCEL;
@@ -115,6 +124,9 @@ class Player extends PhysObj {
     
     ax = input_ax + fx;
     ay = input_ay + fy;
+    
+    if(player.shooting == true && dt >= .1) 
+      shoot();
   }
   
   // Handle collision with the edges of the window
@@ -132,6 +144,60 @@ class Player extends PhysObj {
       vy = 0;
   }
   
+}
+
+class Bullet extends PhysObj {
+  public float x,y;
+  public float dx = 0, dy = 0;
+  
+  public float lifetime = 1000;
+  
+  void move(float dt) {
+    x += dx * dt;
+    y += dy * dt;
+    
+    lifetime -= dt;
+    if(lifetime < 0)
+      alive = false;
+    
+    collide(dt);
+  }
+  
+  void draw() {
+    // We want to draw a line from slightly behind the bullet to slightly ahead of it.
+    // This requires normalizing the velocity vector (getting a unit vector in the same
+    // direction), and then multiplying that by the distance ahead and back.
+    float l = dist(dx,dy,0,0); 
+    float x1 = x + 4*dx/l, y1 = y + 4*dy/l, x2 = x - 4*dx/l, y2 = y - 4*dy/l;
+    
+    
+    ellipse(x1,y1,10,10);
+    color(100,100,0,0);
+    //stroke(color(0,128,255,128));
+    //strokeWeight(8);
+    //line(x1,y1,x2,y2);
+    //stroke(color(128,192,255,255));
+    //strokeWeight(3);
+    //line(x1,y1,x2,y2);
+  }
+  
+  void collide(float dt) {
+    if(x + dx*dt - 4 < 0)
+      dx = abs(dx);
+    if(y + dy*dt - 4 < 0)
+      dy = abs(dy);
+    if(x + dx*dt + 4 > width)
+      dx = -abs(dx);
+    if(y + dy*dt + 4 > height)
+      dy = -abs(dy);
+  }
+}
+void shoot() {
+  Bullet b = new Bullet();
+  b.x = player.x; b.y = player.y;
+  b.dx = cos(PI * (player.heading)/180 );
+  b.dy = sin(PI * (player.heading)/180 );
+  spawn(b);
 }
 
 // The enemy class moves along a straight line, and dies (silently) when it leaves the window, or 
@@ -283,15 +349,17 @@ void spawn(PhysObj o) {
 PImage r;
 PImage hero;
 
+
 void setup() {
   
   // set up the background music using minim.
-  minim = new Minim(this);
-  song = minim.loadFile("theme.mp3");
-  song.play();
+  
+  //minim = new Minim(this);
+  //song = minim.loadFile("theme.mp3");
+  //song.play();
   
   size(1366,768);
-  
+  surface.setResizable(true);
   // Clearing the background here is not strictly necessary, as the game loop will do it at the
   // beginning of each frame anyway.
   //background(255); // White
@@ -361,6 +429,7 @@ void draw() {
   //println(elapsed_time);
 }
 
+
 // When a key is depressed, we set the corresponding input acceleration on the player
 // object to 1. When a key is released, we clear it to 0. Thus, the input_* members of
 // the player object always contain the state of their corresponding inputs. (Some systems
@@ -376,6 +445,18 @@ void keyPressed() {
       player.input_up = 1; break;
     case 'S':
       player.input_down = 1; break;
+    case LEFT:
+      player.heading = 180;
+      player.shooting = true; break;
+    case RIGHT:
+      player.heading = 0;
+      player.shooting = true; break;
+    case UP:
+      player.heading = 270;
+      player.shooting = true; break;
+    case DOWN:
+      player.heading  = 90;
+      player.shooting = true; break; 
     default: 
       break;
   }
@@ -391,6 +472,14 @@ void keyReleased() {
       player.input_up = 0; break;
     case 'S':
       player.input_down = 0; break;
+    case LEFT:
+      player.shooting = false; break;
+    case RIGHT:
+      player.shooting = false; break;
+    case UP:
+      player.shooting = false; break;
+    case DOWN:
+      player.shooting = false; break;
     default: 
       break;
   }  
