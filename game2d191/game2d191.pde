@@ -99,17 +99,22 @@ class PhysObj {
 
 // The Player class responds to player input, and has friction and collision with the borders of the
 // window.
+int stime = millis();
 class Player extends PhysObj {
   
   float input_right, input_left, input_up, input_down;
   float heading;
   float fx, fy;
-  boolean shooting = false; 
+  boolean shooting = false;
+  boolean canShoot = true;
+  int delay = 500;
+  int stime = 0;
   
   // construction to make this object a hero
    Player() {
       Is_Hero = true;
      }
+
   
   // Acceleration is computed from input and friction
   public void accelerate(float dt) {
@@ -125,8 +130,17 @@ class Player extends PhysObj {
     ax = input_ax + fx;
     ay = input_ay + fy;
     
-    if(player.shooting == true && dt >= .1) 
+    if(millis() - stime >= delay){
+         player.canShoot = true;
+         stime = millis();//also update the stored time
+    }
+  
+    
+    if(player.shooting == true && dt >= .1 && player.canShoot == true) {
       shoot();
+      player.canShoot = false;
+    }
+
   }
   
   // Handle collision with the edges of the window
@@ -193,11 +207,13 @@ class Bullet extends PhysObj {
   }
 }
 void shoot() {
+
   Bullet b = new Bullet();
   b.x = player.x; b.y = player.y;
   b.dx = cos(PI * (player.heading)/180 );
   b.dy = sin(PI * (player.heading)/180 );
   spawn(b);
+
 }
 
 // The enemy class moves along a straight line, and dies (silently) when it leaves the window, or 
@@ -349,7 +365,7 @@ void spawn(PhysObj o) {
 PImage r;
 PImage hero;
 
-
+  int time;
 void setup() {
   
   // set up the background music using minim.
