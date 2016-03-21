@@ -1,16 +1,3 @@
-/*
- * make_it_explode
- * "Can you make it explode?" Yes, yes I can.
- * Changelog:
- *   01-25: Made player an element of entities, rather than a special object on its own.
- *          Switched to using System.nanoTime instead millis() for greater precision.
- */
-
-/*
- * Commented out all of the enemy code for simplicity. 
- * Didn't delete it cause it will be useful to reference
-*/
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import ddf.minim.*;
@@ -19,11 +6,7 @@ import ddf.minim.*;
 Minim minim;
 AudioPlayer song;
 
-// The time at which the current frame started.
 long start_time = -1;
-
-// The time taken to compute and render the *previous* frame. This is used to scale the timestep of
-// the *next* frame.
 long elapsed_time; 
 
 // Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
@@ -35,12 +18,7 @@ void delay(int delay)
 }
 
 class PhysObj {
-  
-  // Is this object "alive"? Dead objects will not be processed and will be removed at the end of the current
-  // frame.
   boolean alive = true;
-  
-  //Is this object the hero?
   boolean Is_Hero = false;
   
   // These are intended to be (mostly) constant after initialization
@@ -175,6 +153,14 @@ class Bullet extends PhysObj {
       alive = false;
     
     collide(dt);
+    
+    // Bullet to enemy detection
+    super.move(dt);
+    for(PhysObj o : entities){
+      if(o.Is_Hero == false)
+        if(dist(x,y,o.x,o.y) < 30)
+          o.alive = false;
+    }
   }
   
   void draw() {
@@ -218,29 +204,29 @@ void shoot() {
 
 // The enemy class moves along a straight line, and dies (silently) when it leaves the window, or 
 // violently when it collides with the player.
-//class Enemy extends PhysObj {
+class Enemy extends PhysObj {
   
-//  Enemy() {
-//    DIAMETER = 24; // Smaller than the player
-//    COLOR = #488242; // green
-//  }
+ Enemy() {
+   DIAMETER = 24; // Smaller than the player
+   COLOR = #488242; // green
+ }
   
-//  public void collide(float newx, float newy) {
+ public void collide(float newx, float newy) {
     
-//    // Collision with player?
-//    if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
-//      alive = false;
-//      explode(x,y,vx + player.vx, vy + player.vy);
-//    }
+   // Collision with player?
+   if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
+     alive = false;
+     //explode(x,y,vx + player.vx, vy + player.vy);
+   }
     
-//    // Outside the window?
-//    if(newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
-//       newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
-//      alive = false; // die silently
-//    }
-//  }
+   // Outside the window?
+   if(newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+     alive = false; // die silently
+   }
+ }
   
-//}
+}
 
 // Blood objects move in a fixed direction away from their starting position, but with friction so
 // they slow down with time. They also have their radius linked to their velocity, so they shrink 
@@ -329,33 +315,33 @@ void spawn(PhysObj o) {
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
 // off, because then they'd die immediately) with a velocity vector that points onto the window.
-//void spawnEnemy() {
-//  PhysObj e = new Enemy();
-//  // We randomly choose an edge to spawn from, and then setup everything else based on that.
-//  int edge = (int)random(0,4);
-//  switch(edge) {
-//    case 0: // Top edge
-//    case 2: // Bottom edge
-//      e.y = edge == 0 ? 2 - e.DIAMETER/2 : (height - 2) + e.DIAMETER/2;
-//      e.x = random(e.DIAMETER,width-e.DIAMETER);
-//      e.vy = edge == 0 ? 1 : -1; 
-//      e.vx = e.x < width/2 ? random(0,1) : random(-1,0);
-//      break;
+void spawnEnemy() {
+ PhysObj e = new Enemy();
+ // We randomly choose an edge to spawn from, and then setup everything else based on that.
+ int edge = (int)random(0,4);
+ switch(edge) {
+   case 0: // Top edge
+   case 2: // Bottom edge
+     e.y = edge == 0 ? 2 - e.DIAMETER/2 : (height - 2) + e.DIAMETER/2;
+     e.x = random(e.DIAMETER,width-e.DIAMETER);
+     e.vy = edge == 0 ? 1 : -1; 
+     e.vx = e.x < width/2 ? random(0,1) : random(-1,0);
+     break;
     
-//    case 1:
-//    case 3:
-//      e.x = edge == 1 ? 2 - e.DIAMETER/2 : (width - 2) + e.DIAMETER/2;
-//      e.y = random(e.DIAMETER,height-e.DIAMETER);
-//      e.vx = edge == 1 ? 1 : -1;
-//      e.vy = e.y < height/2 ? random(0,1) : random(-1,0);
-//      break;
-//  }
+   case 1:
+   case 3:
+     e.x = edge == 1 ? 2 - e.DIAMETER/2 : (width - 2) + e.DIAMETER/2;
+     e.y = random(e.DIAMETER,height-e.DIAMETER);
+     e.vx = edge == 1 ? 1 : -1;
+     e.vy = e.y < height/2 ? random(0,1) : random(-1,0);
+     break;
+ }
   
-//  e.vx *= 0.1;
-//  e.vy *= 0.1;
+ e.vx *= 0.1;
+ e.vy *= 0.1;
   
-//  spawn(e);
-//}
+ spawn(e);
+}
 
 // --------------------------------------------------------------------------------------------
 // Event handlers
@@ -367,24 +353,23 @@ PImage hero;
 
   int time;
 void setup() {
-  
-  // set up the background music using minim.
-  
-  //minim = new Minim(this);
-  //song = minim.loadFile("theme.mp3");
-  //song.play();
-  
-  size(1366,768);
-  surface.setResizable(true);
-  // Clearing the background here is not strictly necessary, as the game loop will do it at the
-  // beginning of each frame anyway.
-  //background(255); // White
+
+  // Setup for background music
+  minim = new Minim(this);
+  song = minim.loadFile("theme.mp3");
+  song.play();
   
   // load background and hero images.
   r = loadImage ("room.png");
   hero = loadImage ("ironman.png");
   imageMode(CENTER);
   
+  size(1366,768);
+  surface.setResizable(true);
+  // Clearing the background here is not strictly necessary, as the game loop will do it at the
+  // beginning of each frame anyway.
+  //background(255); // White
+ 
   // Setup some other default drawing attributes
   fill(0);
   noStroke();
@@ -426,8 +411,8 @@ void draw() {
   }
   
   // Spawn an enemy every once in a while
-  //if(random(0,50) <= 1)
-  //  spawnEnemy();
+  if(random(0,50) <= 1)
+   spawnEnemy();
   
   // Purge any dead objects.
   for(Iterator<PhysObj> i = entities.iterator(); i.hasNext(); ) {
