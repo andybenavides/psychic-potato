@@ -21,6 +21,8 @@ class PhysObj {
   boolean alive = true;
   boolean Is_Hero = false;
   
+  int health;
+  
   // These are intended to be (mostly) constant after initialization
   public int DIAMETER = 32;
   public color COLOR = #000000;
@@ -87,6 +89,8 @@ class Player extends PhysObj {
   boolean canShoot = true;
   int delay = 500;
   int stime = 0;
+  int health = 1000;
+  int score = 0;
   
   // construction to make this object a hero
    Player() {
@@ -154,12 +158,14 @@ class Bullet extends PhysObj {
     
     collide(dt);
     
-    // Bullet to enemy detection
+    // Bullet to enemy collison detection
     super.move(dt);
     for(PhysObj o : entities){
       if(o.Is_Hero == false)
-        if(dist(x,y,o.x,o.y) < 30)
+        if(dist(x,y,o.x,o.y) < 30){
           o.alive = false;
+          player.score += 10;
+        }
     }
   }
   
@@ -173,14 +179,14 @@ class Bullet extends PhysObj {
     
     ellipse(x1,y1,10,10);
     color(100,100,0,0);
-    //stroke(color(0,128,255,128));
-    //strokeWeight(8);
-    //line(x1,y1,x2,y2);
-    //stroke(color(128,192,255,255));
-    //strokeWeight(3);
-    //line(x1,y1,x2,y2);
+    stroke(color(0,128,255,128));
+    strokeWeight(8);
+    line(x1,y1,x2,y2);
+    stroke(color(128,192,255,255));
+    strokeWeight(3);
+    line(x1,y1,x2,y2);
   }
-  
+
   void collide(float dt) {
     if(x + dx*dt - 4 < 0)
       dx = abs(dx);
@@ -206,6 +212,8 @@ void shoot() {
 // violently when it collides with the player.
 class Enemy extends PhysObj {
   
+  int health = 500; 
+  
  Enemy() {
    DIAMETER = 24; // Smaller than the player
    COLOR = #488242; // green
@@ -216,6 +224,7 @@ class Enemy extends PhysObj {
    // Collision with player?
    if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
      alive = false;
+     player.health -= 500;
      //explode(x,y,vx + player.vx, vy + player.vy);
    }
     
@@ -353,7 +362,7 @@ PImage hero;
 
   int time;
 void setup() {
-
+  
   // Setup for background music
   minim = new Minim(this);
   song = minim.loadFile("theme.mp3");
@@ -394,6 +403,9 @@ void setup() {
 // this if you are doing something complicated in your draw() handler.
 void draw() {
   
+  
+  if(player.health <= 0)
+    player.alive = false;
   // draw the background picture r (pre-loaded).
   background(r);
   
@@ -428,6 +440,11 @@ void draw() {
   elapsed_time = System.nanoTime() - start_time;
   start_time = System.nanoTime();
   //println(elapsed_time);
+  
+  
+  textSize(20);
+  text("Health: " + player.health, 80, 700);
+  text("Score: " + player.score, 250, 700);
 }
 
 
