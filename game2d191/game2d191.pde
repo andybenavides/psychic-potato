@@ -9,6 +9,8 @@ AudioPlayer song;
 long start_time = -1;
 long elapsed_time; 
 
+boolean PowerUpFlag = false;
+
 // Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
 // will only move with a fixed acceleration.
 void delay(int delay)
@@ -18,18 +20,19 @@ void delay(int delay)
 }
 
 class PhysObj {
+  
   boolean alive = true;
   boolean Is_Hero = false;
   
   int health;
   
   // These are intended to be (mostly) constant after initialization
-  public int DIAMETER = 32;
-  public color COLOR = #000000;
+  public int DIAMETER;
+  public color COLOR;
   
-  public float x, y;    // Position
-  public float vx = 0, vy = 0; // Velocity
-  public float ax, ay;         // Acceleration
+  public float x, y;            // Position
+  public float vx = 0, vy = 0;  // Velocity
+  public float ax, ay;          // Acceleration
   
   // Advance the object one time step (of duration dt)
   public void move(float dt) {
@@ -59,7 +62,7 @@ class PhysObj {
     if(alive && Is_Hero) {
       image (hero,x, y, hero.width/3.5, hero.height/3.5); // draw hero picture
     }
-    else {
+    else if(alive){
       fill(COLOR);
       ellipse(x,y,DIAMETER,DIAMETER); // Just a circle
     }
@@ -89,12 +92,12 @@ class Player extends PhysObj {
   boolean canShoot = true;
   int delay = 500;
   int stime = 0;
-  int health = 1000;
   int score = 0;
   
   // construction to make this object a hero
    Player() {
       Is_Hero = true;
+      health = 1000;
      }
 
   
@@ -117,7 +120,6 @@ class Player extends PhysObj {
          stime = millis();//also update the stored time
     }
   
-    
     if(player.shooting == true && dt >= .1 && player.canShoot == true) {
       shoot();
       player.canShoot = false;
@@ -142,7 +144,13 @@ class Player extends PhysObj {
   
 }
 
-class Bullet extends PhysObj {
+class Bullet extends PhysObj{
+  
+  Bullet(){
+    this.COLOR = #DC1405;
+    this.DIAMETER = 100;
+  }
+  
   public float x,y;
   public float dx = 0, dy = 0;
   
@@ -159,12 +167,12 @@ class Bullet extends PhysObj {
     collide(dt);
     
     // Bullet to enemy collison detection
-    super.move(dt);
     for(PhysObj o : entities){
       if(o.Is_Hero == false)
-        if(dist(x,y,o.x,o.y) < 30){
+        if(dist(x,y,o.x,o.y) < 20){
           o.alive = false;
           player.score += 10;
+          this.alive = false;
         }
     }
   }
@@ -178,13 +186,13 @@ class Bullet extends PhysObj {
     
     
     ellipse(x1,y1,10,10);
-    color(100,100,0,0);
+    color(#DC1405);
     stroke(color(0,128,255,128));
     strokeWeight(8);
-    line(x1,y1,x2,y2);
-    stroke(color(128,192,255,255));
-    strokeWeight(3);
-    line(x1,y1,x2,y2);
+    //line(x1,y1,x2,y2);
+    //stroke(color(128,192,255,255));
+    //strokeWeight(3);
+    //line(x1,y1,x2,y2);
   }
 
   void collide(float dt) {
@@ -208,15 +216,30 @@ void shoot() {
 
 }
 
-// The enemy class moves along a straight line, and dies (silently) when it leaves the window, or 
-// violently when it collides with the player.
+// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
+class PowerUp extends PhysObj {
+   PowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #000000;
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+         player.health += 10; 
+         this.alive = false;
+         PowerUpFlag = false;
+      }
+   }
+}
+
 class Enemy extends PhysObj {
   
-  int health = 500; 
-  
  Enemy() {
-   DIAMETER = 24; // Smaller than the player
-   COLOR = #488242; // green
+   DIAMETER = 40; // Smaller than the player
+   COLOR = #000000; // black
+   health = 500;
  }
   
  public void collide(float newx, float newy) {
@@ -272,24 +295,13 @@ class Enemy extends PhysObj {
 
 // The player object
 Player player;
-
-// Everything else
 LinkedList<PhysObj> entities;
-
-// Newly spawned entities, not yet added to the system.
-// The fact that Java collections only allow modification during iteration through the
-// iterator itself makes all the code associated with spawning new objects very messy
-// if we try to add them directly (as you basically have to pass the iterator to everything). 
-// So instead, we add new objects to a separate list and then append it to the main list at the
-// end of the frame. This also helps prevent time pollution (could be more easily avoided if we
-// could just add elements to the head of the list during iteration).
 LinkedList<PhysObj> new_entities;
 
 // --------------------------------------------------------------------------------------------
 // Utility functions
 // --------------------------------------------------------------------------------------------
 
-// Spawn a new object (i.e., add it to the list of new objects)
 void spawn(PhysObj o) {
   new_entities.add(o);
 }
@@ -321,6 +333,10 @@ void spawn(PhysObj o) {
 //  }
 //}
 
+void spawnPowerUp(){
+  PhysObj pu = new PowerUp();
+  spawn(pu);
+}
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
 // off, because then they'd die immediately) with a velocity vector that points onto the window.
@@ -357,8 +373,7 @@ void spawnEnemy() {
 // --------------------------------------------------------------------------------------------
 
 // Image variable to store image.
-PImage r;
-PImage hero;
+PImage r,hero,health,score;
 
   int time;
 void setup() {
@@ -366,11 +381,13 @@ void setup() {
   // Setup for background music
   minim = new Minim(this);
   song = minim.loadFile("theme.mp3");
-  song.play();
+  //song.play();
   
   // load background and hero images.
   r = loadImage ("room.png");
   hero = loadImage ("ironman.png");
+  health = loadImage ("hud_heartFull.png");
+  score = loadImage ("hud_coins.png");
   imageMode(CENTER);
   
   size(1366,768);
@@ -403,9 +420,14 @@ void setup() {
 // this if you are doing something complicated in your draw() handler.
 void draw() {
   
-  
-  if(player.health <= 0)
+  if(player.health <= 0){
     player.alive = false;
+    textSize(50);
+    fill(#ffffff);
+    text("GAME OVER", 300, 700);
+    noLoop();
+  }
+    
   // draw the background picture r (pre-loaded).
   background(r);
   
@@ -422,9 +444,18 @@ void draw() {
     o.draw();
   }
   
+  // Spawn a powerUp when player hits score of 50 or whatever
+  if(player.score % 50 == 0 && player.score > 49){
+    if(PowerUpFlag == false)
+      spawnPowerUp();
+      PowerUpFlag = true;
+  }
+  
   // Spawn an enemy every once in a while
-  if(random(0,50) <= 1)
+  if(random(0,50) <= 1){
    spawnEnemy();
+  }
+
   
   // Purge any dead objects.
   for(Iterator<PhysObj> i = entities.iterator(); i.hasNext(); ) {
@@ -441,10 +472,12 @@ void draw() {
   start_time = System.nanoTime();
   //println(elapsed_time);
   
-  
   textSize(20);
-  text("Health: " + player.health, 80, 700);
-  text("Score: " + player.score, 250, 700);
+  fill(000);
+  image(health,90,690,width/27,height/20);
+  text(player.health, 130, 700);
+  image(score,250,690,width/30,height/20);
+  text(player.score, 290, 700);
 }
 
 
@@ -498,6 +531,8 @@ void keyReleased() {
       player.shooting = false; break;
     case DOWN:
       player.shooting = false; break;
+    case 'Q':
+      exit();
     default: 
       break;
   }  
