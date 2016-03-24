@@ -24,8 +24,8 @@ class PhysObj {
   boolean alive = true;
   boolean Is_Hero = false;
   
-  int health;
-  
+  public int health;
+
   // These are intended to be (mostly) constant after initialization
   public int DIAMETER;
   public color COLOR;
@@ -93,6 +93,7 @@ class Player extends PhysObj {
   int delay = 500;
   int stime = 0;
   int score = 0;
+  public int damage = 500; 
   
   // construction to make this object a hero
    Player() {
@@ -170,7 +171,7 @@ class Bullet extends PhysObj{
     for(PhysObj o : entities){
       if(o.Is_Hero == false)
         if(dist(x,y,o.x,o.y) < 20){
-          o.alive = false;
+          o.health -= player.damage;
           player.score += 10;
           this.alive = false;
         }
@@ -220,7 +221,7 @@ void shoot() {
 class PowerUp extends PhysObj {
    PowerUp(){
       DIAMETER = 50;
-      this.COLOR = #000000;
+      this.COLOR = #009900; //green
       this.x = random(0,1366);
       this.y = random(0,768);
    }
@@ -241,6 +242,12 @@ class Enemy extends PhysObj {
    COLOR = #000000; // black
    health = 500;
  }
+ 
+ public void accelerate(float dt) {
+   if (this.health <= 0 ){
+     this.alive = false; 
+   }
+ }
   
  public void collide(float newx, float newy) {
     
@@ -250,6 +257,49 @@ class Enemy extends PhysObj {
      player.health -= 500;
      //explode(x,y,vx + player.vx, vy + player.vy);
    }
+    
+   // Outside the window?
+   if(newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+     alive = false; // die silently
+   }
+ }
+  
+}
+
+class Seeker extends PhysObj {
+  
+ Seeker() {
+   DIAMETER = 45; // Smaller than the player
+   COLOR = #B0171F; // Red
+   health = 600;
+ }
+ 
+  public void accelerate(float dt) {
+   if (this.health <= 0 ){
+     this.alive = false; 
+   }
+  }
+  
+ public void collide(float newx, float newy) {
+    
+   // Collision with player?
+   if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
+     player.health -= 500;
+     //explode(x,y,vx + player.vx, vy + player.vy);
+   }
+   
+       // Crossing left edge?
+    if(newx - DIAMETER/0.4 < 0)
+      vx = 0; // Force to positive
+    else if(newx + DIAMETER/0.4 >= width) // Right edge?
+      vx = 0; // Force to negative
+      
+    // Crossing top edge?
+    if(newy - DIAMETER/0.32 < 0)
+      vy = 0; 
+    else if(newy + DIAMETER/0.32 >= height) // Bottom edge?
+      vy = 0;
     
    // Outside the window?
    if(newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
@@ -420,13 +470,7 @@ void setup() {
 // this if you are doing something complicated in your draw() handler.
 void draw() {
   
-  if(player.health <= 0){
-    player.alive = false;
-    textSize(50);
-    fill(#ffffff);
-    text("GAME OVER", 300, 700);
-    noLoop();
-  }
+
     
   // draw the background picture r (pre-loaded).
   background(r);
@@ -478,6 +522,16 @@ void draw() {
   text(player.health, 130, 700);
   image(score,250,690,width/30,height/20);
   text(player.score, 290, 700);
+  
+    if(player.health <= 0){
+    player.alive = false;
+    textSize(50);
+    fill(#ffffff);
+    text("GAME OVER", width/2 - 150, height/2);
+    textSize(35);
+    text("Basically, you're bad", width/2 - 165, height/2 + 50);
+    noLoop();
+  }
 }
 
 
@@ -508,6 +562,12 @@ void keyPressed() {
     case DOWN:
       player.heading  = 90;
       player.shooting = true; break; 
+    case ']':
+      PhysObj s = new Seeker();
+      s.x = width/3;
+      s.y = height/2;
+      spawn(s);
+      break;
     default: 
       break;
   }
