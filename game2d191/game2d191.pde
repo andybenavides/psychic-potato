@@ -9,7 +9,9 @@ AudioPlayer song, acquirePowerUp, shoot, damage;
 long start_time = -1;
 long elapsed_time; 
 
-boolean PowerUpFlag = false;
+float dist2(float x1, float y1, float x2, float y2) {
+  return sq(x1-x2) + sq(y1-y2);
+}
 
 // Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
 // will only move with a fixed acceleration.
@@ -23,11 +25,12 @@ class PhysObj {
   
   boolean alive = true;
   boolean Is_Hero = false;
+  boolean Is_Enemy = false;
   
   public int health;
 
   // These are intended to be (mostly) constant after initialization
-  public int DIAMETER;
+  public int DIAMETER = 50;
   public color COLOR;
   
   public float x, y;            // Position
@@ -93,7 +96,7 @@ class Player extends PhysObj {
   int delay = 500;
   int stime = 0;
   int score = 0;
-  public int damage = 500; 
+  public int damage = 100; 
   
   // construction to make this object a hero
    Player() {
@@ -109,7 +112,7 @@ class Player extends PhysObj {
     fx = -vx * FRICTION;
     fy = -vy * FRICTION;
     
-    final float INPUT_ACCEL = 0.004;
+    float INPUT_ACCEL = 0.004;
     float input_ax = (input_right - input_left) * INPUT_ACCEL;
     float input_ay = (input_down - input_up) * INPUT_ACCEL;
     
@@ -149,7 +152,6 @@ class Bullet extends PhysObj{
   
   Bullet(){
     this.COLOR = #DC1405;
-    this.DIAMETER = 100;
   }
   
   public float x,y;
@@ -172,7 +174,6 @@ class Bullet extends PhysObj{
       if(o.Is_Hero == false)
         if(dist(x,y,o.x,o.y) < 20){
           o.health -= player.damage;
-          player.score += 10;
           this.alive = false;
         }
     }
@@ -224,11 +225,29 @@ void playAudio(AudioPlayer a){
    a.rewind();
 }
 
-class speedPowerUp extends PhysObj {
+class damagePowerUp extends PhysObj {
   
-   speedPowerUp(){
+   damagePowerUp(){
       DIAMETER = 50;
-      this.COLOR = #009900; //green
+      this.COLOR = #ffff00; // blue
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.damage += 50;
+        this.alive = false;
+      }
+   }
+}
+
+class shootingSpeedPowerUp extends PhysObj {
+  
+   shootingSpeedPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #0000ff; // blue
       this.x = random(0,1366);
       this.y = random(0,768);
    }
@@ -238,7 +257,6 @@ class speedPowerUp extends PhysObj {
         playAudio(acquirePowerUp);
         player.delay -= 200; 
         this.alive = false;
-        PowerUpFlag = false;
       }
    }
 }
@@ -258,7 +276,6 @@ class healthPowerUp extends PhysObj {
         playAudio(acquirePowerUp);
         player.health += 10; 
         this.alive = false;
-        PowerUpFlag = false;
       }
    }
 }
@@ -268,12 +285,36 @@ class Enemy extends PhysObj {
  Enemy() {
    DIAMETER = 40; // Smaller than the player
    COLOR = #000000; // black
-   health = 500;
+   health = 200;
+   Is_Enemy = true;
  }
  
+ public void pursue(PhysObj target, float strength){
+   float dx = x - target.x; 
+   float dy = y - target.y;
+   float l = dist2(0,0,dx,dy);
+   if(l != 0){
+      l = sqrt(l);
+      dx /= l;
+      dy /= l;
+   }  
+   ax += dx * strength / l;
+   ay += dy * strength / l;
+  }
+ 
  public void accelerate(float dt) {
+   
+   for(PhysObj o : entities){
+      if(o != this){
+         if(o.Is_Hero){
+            pursue(o,-0.0001); 
+         }
+      }
+   }
+   
    if (this.health <= 0 ){
-     this.alive = false; 
+     this.alive = false;
+     player.score += 10;
    }
  }
   
@@ -283,7 +324,7 @@ class Enemy extends PhysObj {
    if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
      alive = false;
      playAudio(damage);
-     player.health -= 500;
+     player.health -= 100;
      //explode(x,y,vx + player.vx, vy + player.vy);
    }
     
@@ -414,7 +455,7 @@ void spawn(PhysObj o) {
 
 void spawnPowerUp(){
   
-  int rand = (int)random(0,1);
+  int rand = (int)random(0,4);
   
   switch(rand){
      case 1:
@@ -422,9 +463,12 @@ void spawnPowerUp(){
        spawn(hpu);
        break;
      case 0:
-       PhysObj spu = new speedPowerUp();
+       PhysObj spu = new shootingSpeedPowerUp();
        spawn(spu);
        break;
+     case 2:
+       PhysObj dpu = new damagePowerUp();
+       spawn(dpu);
      default:
        break;
   }
@@ -533,13 +577,9 @@ void draw() {
     o.draw();
   }
   
-  // Spawn a powerUp when player hits score of 50 or whatever
-  if(player.score % 50 == 0 && player.score > 49){
-    if(PowerUpFlag == false){
-     spawnPowerUp();
-     PowerUpFlag = true;
-    }
-     
+  // Spawn a powerUp at random
+  if(random(0,2000) <= 1){
+    spawnPowerUp();    
   }
   
   // Spawn an enemy every once in a while
@@ -570,7 +610,7 @@ void draw() {
   image(score,250,690,width/30,height/20);
   text(player.score, 290, 700);
   
-    if(player.health <= 0){
+  if(player.health <= 0){
     player.alive = false;
     textSize(50);
     fill(#ffffff);
@@ -615,10 +655,6 @@ void keyPressed() {
       s.y = height/2;
       spawn(s);
       break;
-    case 'P':
-      noLoop();
-    case 'B':
-      loop();
     default: 
       break;
   }
