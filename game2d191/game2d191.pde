@@ -4,7 +4,7 @@ import ddf.minim.*;
 
 // using minim library creates song.
 Minim minim;
-AudioPlayer song;
+AudioPlayer song, acquirePowerUp, shoot, damage;
 
 long start_time = -1;
 long elapsed_time; 
@@ -213,13 +213,20 @@ void shoot() {
   b.x = player.x; b.y = player.y;
   b.dx = cos(PI * (player.heading)/180 );
   b.dy = sin(PI * (player.heading)/180 );
+  playAudio(shoot);
   spawn(b);
 
 }
 
-// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
-class PowerUp extends PhysObj {
-   PowerUp(){
+//  Helper function for audio looping
+void playAudio(AudioPlayer a){
+   a.play();
+   a.rewind();
+}
+
+class speedPowerUp extends PhysObj {
+  
+   speedPowerUp(){
       DIAMETER = 50;
       this.COLOR = #009900; //green
       this.x = random(0,1366);
@@ -228,9 +235,30 @@ class PowerUp extends PhysObj {
    
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
-         player.health += 10; 
-         this.alive = false;
-         PowerUpFlag = false;
+        playAudio(acquirePowerUp);
+        player.delay -= 200; 
+        this.alive = false;
+        PowerUpFlag = false;
+      }
+   }
+}
+
+// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
+class healthPowerUp extends PhysObj {
+  
+   healthPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #009900; //green
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.health += 10; 
+        this.alive = false;
+        PowerUpFlag = false;
       }
    }
 }
@@ -254,6 +282,7 @@ class Enemy extends PhysObj {
    // Collision with player?
    if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
      alive = false;
+     playAudio(damage);
      player.health -= 500;
      //explode(x,y,vx + player.vx, vy + player.vy);
    }
@@ -384,8 +413,21 @@ void spawn(PhysObj o) {
 //}
 
 void spawnPowerUp(){
-  PhysObj pu = new PowerUp();
-  spawn(pu);
+  
+  int rand = (int)random(0,1);
+  
+  switch(rand){
+     case 1:
+       PhysObj hpu = new healthPowerUp();
+       spawn(hpu);
+       break;
+     case 0:
+       PhysObj spu = new speedPowerUp();
+       spawn(spu);
+       break;
+     default:
+       break;
+  }
 }
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
@@ -431,7 +473,10 @@ void setup() {
   // Setup for background music
   minim = new Minim(this);
   song = minim.loadFile("theme.mp3");
-  //song.play();
+  acquirePowerUp = minim.loadFile("powerUp.mp3");
+  shoot = minim.loadFile("shoot.mp3");
+  damage = minim.loadFile("damage.mp3");
+  song.play();
   
   // load background and hero images.
   r = loadImage ("room.png");
@@ -490,9 +535,11 @@ void draw() {
   
   // Spawn a powerUp when player hits score of 50 or whatever
   if(player.score % 50 == 0 && player.score > 49){
-    if(PowerUpFlag == false)
-      spawnPowerUp();
-      PowerUpFlag = true;
+    if(PowerUpFlag == false){
+     spawnPowerUp();
+     PowerUpFlag = true;
+    }
+     
   }
   
   // Spawn an enemy every once in a while
@@ -568,6 +615,10 @@ void keyPressed() {
       s.y = height/2;
       spawn(s);
       break;
+    case 'P':
+      noLoop();
+    case 'B':
+      loop();
     default: 
       break;
   }
