@@ -8,6 +8,10 @@ AudioPlayer song, acquirePowerUp, shoot, damage;
 
 long start_time = -1;
 long elapsed_time; 
+float startTime,endTime;
+float INPUT_ACCEL = 0.004;
+boolean timeBasedPowerUp;
+
 
 float dist2(float x1, float y1, float x2, float y2) {
   return sq(x1-x2) + sq(y1-y2);
@@ -30,7 +34,7 @@ class PhysObj {
   public int health;
 
   // These are intended to be (mostly) constant after initialization
-  public int DIAMETER = 50;
+  public int DIAMETER = 30;
   public color COLOR;
   
   public float x, y;            // Position
@@ -112,7 +116,6 @@ class Player extends PhysObj {
     fx = -vx * FRICTION;
     fy = -vy * FRICTION;
     
-    float INPUT_ACCEL = 0.004;
     float input_ax = (input_right - input_left) * INPUT_ACCEL;
     float input_ay = (input_down - input_up) * INPUT_ACCEL;
     
@@ -223,6 +226,27 @@ void shoot() {
 void playAudio(AudioPlayer a){
    a.play();
    a.rewind();
+}
+
+class timeBasedPowerUp extends PhysObj{
+   timeBasedPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #ffffff;
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        startTime = millis();
+        playAudio(acquirePowerUp);
+        player.canShoot = false;
+        this.alive = false;
+        INPUT_ACCEL = 0.001;
+        timeBasedPowerUp = true;
+      }
+   }
+   
 }
 
 class damagePowerUp extends PhysObj {
@@ -455,7 +479,7 @@ void spawn(PhysObj o) {
 
 void spawnPowerUp(){
   
-  int rand = (int)random(0,4);
+  int rand = (int)random(0,3);
   
   switch(rand){
      case 1:
@@ -520,7 +544,7 @@ void setup() {
   acquirePowerUp = minim.loadFile("powerUp.mp3");
   shoot = minim.loadFile("shoot.mp3");
   damage = minim.loadFile("damage.mp3");
-  song.play();
+  song.loop();
   
   // load background and hero images.
   r = loadImage ("room.png");
@@ -558,11 +582,18 @@ void setup() {
 // that Processing defaults to a locked (maximum) framerate of 60 FPS, and also you may drop below 
 // this if you are doing something complicated in your draw() handler.
 void draw() {
-  
 
-    
   // draw the background picture r (pre-loaded).
   background(r);
+  
+  endTime = millis();
+  println(startTime);
+  println(endTime);
+  
+  if(endTime - startTime > 5000 && endTime - startTime < 5100){
+    INPUT_ACCEL = 0.004;
+    timeBasedPowerUp = false;
+  }
   
   // Clear the display 
   //background(255);
@@ -609,6 +640,11 @@ void draw() {
   text(player.health, 130, 700);
   image(score,250,690,width/30,height/20);
   text(player.score, 290, 700);
+  if(timeBasedPowerUp){
+    textSize(35);
+    fill(#ffffff);
+    text(startTime/1000+5-endTime/1000, 500, 700);
+  }
   
   if(player.health <= 0){
     player.alive = false;
@@ -680,6 +716,9 @@ void keyReleased() {
       player.shooting = false; break;
     case 'Q':
       exit();
+    case 'B':
+      PhysObj tpu = new timeBasedPowerUp();
+      spawn(tpu);
     default: 
       break;
   }  
