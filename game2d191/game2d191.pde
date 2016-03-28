@@ -25,6 +25,40 @@ void delay(int delay)
   while(millis() - time <= delay);
 }
 
+// class for creating a sprite with a spritesheet for hero
+//--------------------------sprite------------------------------------------------------------
+class sprite {
+  PImage cell[];
+  int cnt = 0, step = 0, dir = 0;
+  
+  sprite() {
+    cell = new PImage[12];
+    for (int y = 0; y < 4; y++)
+      for (int x = 0; x < 3; x++)
+        cell[y*3+x] = spriteSheet.get(x*147,y*120, 147,120);     
+  }
+  
+  void turn(int _dir) {
+    if (_dir >= 0 && _dir < 4) dir = _dir;
+    println (dir);
+  }
+  
+  void check(float a, float b) {
+    if (cnt++ > 7) {
+      cnt = 0;
+      step++;
+      if (step >= 4) 
+        step = 0;
+    }
+    int idx = dir*3+ (step == 3 ? 1 : step);
+    image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+  }
+}
+
+//-------------------------------------------------------------------------------------------
+
+
+
 class PhysObj {
   
   boolean alive = true;
@@ -67,7 +101,9 @@ class PhysObj {
   // Draw the object at its current location
   public void draw() {
     if(alive && Is_Hero) {
-      image (hero,x, y, hero.width/3.5, hero.height/3.5); // draw hero picture
+      // walker is a sprite object and it calls check() 
+      //   in sprite to draw hero and pass in position x,y.
+      walker.check(x,y);
     }
     else if(alive){
       fill(COLOR);
@@ -533,7 +569,11 @@ void spawnEnemy() {
 // --------------------------------------------------------------------------------------------
 
 // Image variable to store image.
-PImage r,hero,health,score;
+PImage r, spriteSheet,health,score; //hero
+
+// creates a sprite object
+sprite walker;
+
 
   int time;
 void setup() {
@@ -548,10 +588,14 @@ void setup() {
   
   // load background and hero images.
   r = loadImage ("room.png");
-  hero = loadImage ("ironman.png");
+  spriteSheet = loadImage("player.png");
+  //hero = loadImage ("ironman.png");
   health = loadImage ("hud_heartFull.png");
   score = loadImage ("hud_coins.png");
   imageMode(CENTER);
+  
+  // start the object sprite
+  walker = new sprite();
   
   size(1366,768);
   surface.setResizable(true);
@@ -666,25 +710,42 @@ void draw() {
 void keyPressed() {
   switch(keyCode) {
     case 'A':
-      player.input_left = 1; break;
+      { player.input_left = 1; 
+        walker.turn(2); 
+        break; }
     case 'D':
-      player.input_right = 1; break;
+      { player.input_right = 1; 
+        walker.turn(3); 
+        break; }
     case 'W':
-      player.input_up = 1; break;
+      { player.input_up = 1; 
+        walker.turn(1); 
+        break; }
     case 'S':
-      player.input_down = 1; break;
+      { player.input_down = 1; 
+        walker.turn(0); 
+        break; }
     case LEFT:
-      player.heading = 180;
-      player.shooting = true; break;
+      { player.heading = 180;
+        player.shooting = true; 
+        walker.turn(2);
+        break; }
     case RIGHT:
-      player.heading = 0;
-      player.shooting = true; break;
+      { player.heading = 0;
+        player.shooting = true; 
+        walker.turn(3);
+        break; }
     case UP:
-      player.heading = 270;
-      player.shooting = true; break;
+      { player.heading = 270;
+        player.shooting = true; 
+        walker.turn(1);
+        break; }
     case DOWN:
-      player.heading  = 90;
-      player.shooting = true; break; 
+      { player.heading  = 90;
+        player.shooting = true;
+        walker.turn(0);
+        break; } 
+       
     case ']':
       PhysObj s = new Seeker();
       s.x = width/3;
