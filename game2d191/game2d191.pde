@@ -138,7 +138,7 @@ class Player extends PhysObj {
   int score = 0;
   public int damage = 100; 
   
-  // construction to make this object a hero
+  // construction to make this object a hero and initialize health
    Player() {
       Is_Hero = true;
       health = 1000;
@@ -163,7 +163,7 @@ class Player extends PhysObj {
          stime = millis();//also update the stored time
     }
   
-    if(player.shooting == true && dt >= .1 && player.canShoot == true) {
+    if(player.shooting == true && dt >= .1 && player.canShoot) {
       shoot();
       player.canShoot = false;
     }
@@ -219,17 +219,13 @@ class Bullet extends PhysObj{
   }
   
   void draw() {
-    // We want to draw a line from slightly behind the bullet to slightly ahead of it.
-    // This requires normalizing the velocity vector (getting a unit vector in the same
-    // direction), and then multiplying that by the distance ahead and back.
     float l = dist(dx,dy,0,0); 
     float x1 = x + 4*dx/l, y1 = y + 4*dy/l, x2 = x - 4*dx/l, y2 = y - 4*dy/l;
-    
     
     ellipse(x1,y1,10,10);
     color(#DC1405);
     stroke(color(0,128,255,128));
-    strokeWeight(8);
+    strokeWeight(5);
     //line(x1,y1,x2,y2);
     //stroke(color(128,192,255,255));
     //strokeWeight(3);
@@ -288,16 +284,16 @@ class timeBasedPowerUp extends PhysObj{
 class damagePowerUp extends PhysObj {
   
    damagePowerUp(){
-      DIAMETER = 50;
-      this.COLOR = #ffff00; // blue
-      this.x = random(0,1366);
-      this.y = random(0,768);
+      DIAMETER = 40;
+      this.COLOR = #ffff00; // yellow
+      this.x = random(20,1346);
+      this.y = random(20,748);
    }
    
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
         playAudio(acquirePowerUp);
-        player.damage += 50;
+        player.damage += 100;
         this.alive = false;
       }
    }
@@ -308,8 +304,8 @@ class shootingSpeedPowerUp extends PhysObj {
    shootingSpeedPowerUp(){
       DIAMETER = 50;
       this.COLOR = #0000ff; // blue
-      this.x = random(0,1366);
-      this.y = random(0,768);
+      this.x = random(20,1346);
+      this.y = random(20,748);
    }
    
    public void collide(float newx, float newy){
@@ -327,14 +323,14 @@ class healthPowerUp extends PhysObj {
    healthPowerUp(){
       DIAMETER = 50;
       this.COLOR = #009900; //green
-      this.x = random(0,1366);
-      this.y = random(0,768);
+      this.x = random(20,1346);
+      this.y = random(20,748);
    }
    
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
         playAudio(acquirePowerUp);
-        player.health += 10; 
+        player.health += 100; 
         this.alive = false;
       }
    }
@@ -345,7 +341,7 @@ class Enemy extends PhysObj {
  Enemy() {
    DIAMETER = 40; // Smaller than the player
    COLOR = #000000; // black
-   health = 200;
+   health = 300;
    Is_Enemy = true;
  }
  
@@ -357,7 +353,7 @@ class Enemy extends PhysObj {
       l = sqrt(l);
       dx /= l;
       dy /= l;
-   }  
+   }
    ax += dx * strength / l;
    ay += dy * strength / l;
   }
@@ -365,11 +361,11 @@ class Enemy extends PhysObj {
  public void accelerate(float dt) {
    
    for(PhysObj o : entities){
-      if(o != this){
-         if(o.Is_Hero){
-            pursue(o,-0.0001); 
-         }
-      }
+     if(o != this){
+        if(o.Is_Hero){
+           pursue(o,-0.0001); 
+        }
+     }
    }
    
    if (this.health <= 0 ){
@@ -515,7 +511,8 @@ void spawn(PhysObj o) {
 
 void spawnPowerUp(){
   
-  int rand = (int)random(0,3);
+  //int rand = (int)random(0,3);
+  int rand = 2;
   
   switch(rand){
      case 1:
@@ -631,8 +628,6 @@ void draw() {
   background(r);
   
   endTime = millis();
-  println(startTime);
-  println(endTime);
   
   if(endTime - startTime > 5000 && endTime - startTime < 5100){
     INPUT_ACCEL = 0.004;
@@ -687,8 +682,12 @@ void draw() {
   if(timeBasedPowerUp){
     textSize(35);
     fill(#ffffff);
-    text(startTime/1000+5-endTime/1000, 500, 700);
+    text("ends in: "+(int)(startTime/1000+5-endTime/1000), 500, 700);
   }
+  
+  textSize(20);
+  fill(#ffff00);
+  text("Strength level: "+player.damage/100,1000,100);
   
   if(player.health <= 0){
     player.alive = false;
