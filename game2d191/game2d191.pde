@@ -511,8 +511,7 @@ void spawn(PhysObj o) {
 
 void spawnPowerUp(){
   
-  //int rand = (int)random(0,3);
-  int rand = 2;
+  int rand = (int)random(0,3);
   
   switch(rand){
      case 1:
