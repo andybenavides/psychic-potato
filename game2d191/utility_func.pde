@@ -1,10 +1,22 @@
 
-// all the utility functions: spawning, power ups, sprite, audio.
+// all the utility functions: shoot,spawning, power ups, sprite, audio.
 
 // --------------------------------------------------------------------------------------------
 // Utility functions
 // --------------------------------------------------------------------------------------------
 
+void shoot() {
+
+  Bullet b = new Bullet();
+  b.x = player.x; b.y = player.y;
+  b.dx = cos(PI * (player.heading)/180 );
+  b.dy = sin(PI * (player.heading)/180 );
+  playAudio(shoot);
+  spawn(b);
+
+}
+
+//--------------------------------------------------------------------------------------
 void spawn(PhysObj o) {
   new_entities.add(o);
 }
@@ -36,21 +48,42 @@ void spawn(PhysObj o) {
 //  }
 //}
 
-//---------------------------------------------------
+//---------------------------------------------------------------
 
-class damagePowerUp extends PhysObj {
-  
-   damagePowerUp(){
+class timeBasedPowerUp extends PhysObj{
+   timeBasedPowerUp(){
       DIAMETER = 50;
-      this.COLOR = #ffff00; // blue
+      this.COLOR = #ffffff;
       this.x = random(0,1366);
       this.y = random(0,768);
    }
    
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        startTime = millis();
         playAudio(acquirePowerUp);
-        player.damage += 50;
+        player.canShoot = false;
+        this.alive = false;
+        INPUT_ACCEL = 0.001;
+        timeBasedPowerUp = true;
+      }
+   }
+   
+}
+
+class damagePowerUp extends PhysObj {
+  
+   damagePowerUp(){
+      DIAMETER = 40;
+      this.COLOR = #ffff00; // yellow
+      this.x = random(20,1346);
+      this.y = random(20,748);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.damage += 100;
         this.alive = false;
       }
    }
@@ -61,8 +94,8 @@ class shootingSpeedPowerUp extends PhysObj {
    shootingSpeedPowerUp(){
       DIAMETER = 50;
       this.COLOR = #0000ff; // blue
-      this.x = random(0,1366);
-      this.y = random(0,768);
+      this.x = random(20,1346);
+      this.y = random(20,748);
    }
    
    public void collide(float newx, float newy){
@@ -73,6 +106,8 @@ class shootingSpeedPowerUp extends PhysObj {
       }
    }
 }
+
+
 
 // The powerUp class will act as a physical object but will offer some form of upgrade to the player 
 class healthPowerUp extends PhysObj {
