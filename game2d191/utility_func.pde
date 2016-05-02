@@ -1,5 +1,5 @@
 
-// all the utility functions: shoot,spawning, power ups, sprite, audio.
+// all the utility functions: shoot, spawning, sprite, audio, delay for shoot.
 
 // --------------------------------------------------------------------------------------------
 // Utility functions
@@ -20,8 +20,8 @@ void shoot() {
 void spawn(PhysObj o) {
   new_entities.add(o);
 }
-  
-
+ 
+//--- for blood in case we need it-------------------------------------------------------------
 // Spawn an explosion at (x,y) with a velocity tending in the direction of (dx,dy)
 //void explode(float x, float y, float dx, float dy) {
 //  // An explosion consists of 15-20 blood particles, with random velocities. The problem is that
@@ -48,101 +48,28 @@ void spawn(PhysObj o) {
 //  }
 //}
 
-//---------------------------------------------------------------
-
-class timeBasedPowerUp extends PhysObj{
-   timeBasedPowerUp(){
-      DIAMETER = 50;
-      this.COLOR = #ffffff;
-      this.x = random(0,1366);
-      this.y = random(0,768);
-   }
-   
-   public void collide(float newx, float newy){
-      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
-        startTime = millis();
-        playAudio(acquirePowerUp);
-        player.canShoot = false;
-        this.alive = false;
-        INPUT_ACCEL = 0.001;
-        timeBasedPowerUp = true;
-      }
-   }
-   
-}
-
-class damagePowerUp extends PhysObj {
-  
-   damagePowerUp(){
-      DIAMETER = 40;
-      this.COLOR = #ffff00; // yellow
-      this.x = random(20,1346);
-      this.y = random(20,748);
-   }
-   
-   public void collide(float newx, float newy){
-      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
-        playAudio(acquirePowerUp);
-        player.damage += 100;
-        this.alive = false;
-      }
-   }
-}
-
-class shootingSpeedPowerUp extends PhysObj {
-  
-   shootingSpeedPowerUp(){
-      DIAMETER = 50;
-      this.COLOR = #0000ff; // blue
-      this.x = random(20,1346);
-      this.y = random(20,748);
-   }
-   
-   public void collide(float newx, float newy){
-      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
-        playAudio(acquirePowerUp);
-        player.delay -= 200; 
-        this.alive = false;
-      }
-   }
-}
-
-
-
-// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
-class healthPowerUp extends PhysObj {
-  
-   healthPowerUp(){
-      DIAMETER = 50;
-      this.COLOR = #009900; //green
-      this.x = random(0,1366);
-      this.y = random(0,768);
-   }
-   
-   public void collide(float newx, float newy){
-      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
-        playAudio(acquirePowerUp);
-        player.health += 10; 
-        this.alive = false;
-      }
-   }
-}
 
 void spawnPowerUp(){
   
-  int rand = (int)random(0,4);
+  int rand = (int)random(0,3);
   
   switch(rand){
      case 1:
        PhysObj hpu = new healthPowerUp();
+       hpu.x=random(200,1166);
+       hpu.y=random(200,568);
        spawn(hpu);
        break;
      case 0:
        PhysObj spu = new shootingSpeedPowerUp();
+       spu.x=random(200,1166);
+       spu.y=random(200,568);
        spawn(spu);
        break;
      case 2:
        PhysObj dpu = new damagePowerUp();
+       dpu.x=random(200,1166);
+       dpu.y=random(200,568);
        spawn(dpu);
      default:
        break;
@@ -151,50 +78,33 @@ void spawnPowerUp(){
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
 // off, because then they'd die immediately) with a velocity vector that points onto the window.
-void spawnEnemy() {
+void spawnEnemy(float x, float y) {
  PhysObj e = new Enemy();
- // We randomly choose an edge to spawn from, and then setup everything else based on that.
- int edge = (int)random(0,4);
- switch(edge) {
-   case 0: // Top edge
-   case 2: // Bottom edge
-     e.y = edge == 0 ? 2 - e.DIAMETER/2 : (height - 2) + e.DIAMETER/2;
-     e.x = random(e.DIAMETER,width-e.DIAMETER);
-     e.vy = edge == 0 ? 1 : -1; 
-     e.vx = e.x < width/2 ? random(0,1) : random(-1,0);
-     break;
-    
-   case 1:
-   case 3:
-     e.x = edge == 1 ? 2 - e.DIAMETER/2 : (width - 2) + e.DIAMETER/2;
-     e.y = random(e.DIAMETER,height-e.DIAMETER);
-     e.vx = edge == 1 ? 1 : -1;
-     e.vy = e.y < height/2 ? random(0,1) : random(-1,0);
-     break;
- }
-  
- e.vx *= 0.1;
- e.vy *= 0.1;
-  
- spawn(e);
+     //int edge = 0;
+     e.y = x; // edge == 0 ? 2 - e.DIAMETER/2 : (height - 2) + e.DIAMETER/2;
+     e.x = y; //random(e.DIAMETER,width-e.DIAMETER);
+     e.vy = .1; //edge == 0 ? 1 : -1; 
+     e.vx = .1; //e.x < width/2 ? random(0,1) : random(-1,0)
+     spawn(e);
+ 
 }
 
 // class for creating a sprite with a spritesheet for hero
 //--------------------------sprite------------------------------------------------------------
-class sprite {
+class sprite_hero {
   PImage cell[];
   int cnt = 0, step = 0, dir = 0;
   
-  sprite() {
+  sprite_hero() {
     cell = new PImage[12];
     for (int y = 0; y < 4; y++)
       for (int x = 0; x < 3; x++)
-        cell[y*3+x] = spriteSheet.get(x*147,y*120, 147,120);     
+        cell[y*3+x] = spriteSheet_hero.get(x*147,y*120, 147,120);     
   }
   
   void turn(int _dir) {
     if (_dir >= 0 && _dir < 4) dir = _dir;
-    println (dir);
+    //println (dir);
   }
   
   void check(float a, float b) {
@@ -204,12 +114,69 @@ class sprite {
       if (step >= 4) 
         step = 0;
     }
-    int idx = dir*3+ (step == 3 ? 1 : step);
-    image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+    
+    // check input, if player is walking then display animation.
+    if (player.input_up == 1 || player.input_down == 1
+        || player.input_left == 1 || player.input_right == 1)
+    {
+      int idx = dir*3+ (step == 3 ? 1 : step);
+      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+    }
+    
+    // check input, if player is not walking, just display standing.
+    else
+    {
+      int idx = dir*3;// + (step == 3 ? 1 : step);
+      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+    }
   }
 }
 
+//-----------------------------------------------------------------------------
+// class for creating a sprite with a spritesheet for monster
+//--------------------------sprite------------------------------------------------------------
+class sprite_monster {
+  PImage cell[];
+  int cnt = 0, step = 0, dir = 0;
+  
+  sprite_monster() {
+    cell = new PImage[6];
+    for (int y = 0; y < 2; y++)
+      for (int x = 0; x < 3; x++)
+        cell[y*3+x] = spriteSheet_monster.get(x*77,y*102,77,102);     
+  }
+  
+  void turn(int _dir) {
+    if (_dir >= 0 && _dir < 4) dir = _dir;
+    //println (dir);
+  }
+  
+  void check(float a, float b) {
+    if (cnt++ > 7) {
+      cnt = 0;
+      step++;
+      if (step >= 4) 
+        step = 0;
+    }
+    
+    
+      int idx = dir*3+ (step == 3 ? 1 : step);
+      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+    
+  }
+}
 
+//-----------------------------------------------------------------------------------
+
+// Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
+// will only move with a fixed acceleration.
+void delay(int delay)
+{
+  int time = millis();
+  while(millis() - time <= delay);
+}
+
+//---------------------------------------------------
 //  Helper function for audio looping
 void playAudio(AudioPlayer a){
    a.play();

@@ -1,5 +1,6 @@
 
-// all the entities: PhysObj, player, bullets, and delay for bullet.
+// entities: PhysObj, player, bullets, power ups.
+// enemies have a separate file.
 
 //--------------------------------------------------------
 class PhysObj {
@@ -48,9 +49,12 @@ class PhysObj {
       //   in sprite to draw hero and pass in position x,y.
       walker.check(x,y);
     }
-    else if(alive){
-      fill(COLOR);
-      ellipse(x,y,DIAMETER,DIAMETER); // Just a circle
+    else if(alive && Is_Enemy){
+       m_walker.check(x,y);
+    }
+    else if(alive) {
+       fill(COLOR);
+       ellipse(x,y,DIAMETER,DIAMETER); // Just a circle
     }
   }
   
@@ -117,15 +121,15 @@ class Player extends PhysObj {
   // Handle collision with the edges of the window
   void collide(float newx, float newy) {
     // Crossing left edge?
-    if(newx - DIAMETER/0.4 < 0)
+    if(newx - DIAMETER/0.6 < 0)
       vx = 0; // Force to positive
-    else if(newx + DIAMETER/0.4 >= width) // Right edge?
+    else if(newx + DIAMETER/0.6 >= width) // Right edge?
       vx = 0; // Force to negative
       
     // Crossing top edge?
-    if(newy - DIAMETER/0.32 < 0)
+    if(newy - DIAMETER/0.95 < 0)
       vy = 0; 
-    else if(newy + DIAMETER/0.32 >= height) // Bottom edge?
+    else if(newy + DIAMETER/0.45 >= height) // Bottom edge?
       vy = 0;
   }
   
@@ -155,7 +159,7 @@ class Bullet extends PhysObj{
     // Bullet to enemy collison detection
     for(PhysObj o : entities){
       if(o.Is_Hero == false)
-        if(dist(x,y,o.x,o.y) < 20){
+        if(dist(x,y,o.x,o.y) < 30){
           o.health -= player.damage;
           this.alive = false;
         }
@@ -192,12 +196,83 @@ class Bullet extends PhysObj{
   }
 }
 
-//-------------------------------------------------------
+//-------Power Ups----------------------------------------
+//---------------------------------------------------------------
 
-// Abstract-ish base class for objects with basic physics. Although you can instantiate this class, instances
-// will only move with a fixed acceleration.
-void delay(int delay)
-{
-  int time = millis();
-  while(millis() - time <= delay);
+class timeBasedPowerUp extends PhysObj{
+   timeBasedPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #ffffff;
+      this.x = random(200,1166);
+      this.y = random(200,568);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        startTime = millis();
+        playAudio(acquirePowerUp);
+        player.canShoot = false;
+        this.alive = false;
+        INPUT_ACCEL = 0.001;
+        timeBasedPowerUp = true;
+      }
+   }
+   
+}
+
+class damagePowerUp extends PhysObj {
+  
+   damagePowerUp(){
+      DIAMETER = 40;
+      this.COLOR = #ffff00; // yellow
+      this.x = random(20,1346);
+      this.y = random(20,748);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.damage += 100;
+        this.alive = false;
+      }
+   }
+}
+
+class shootingSpeedPowerUp extends PhysObj {
+  
+   shootingSpeedPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #0000ff; // blue
+      this.x = random(20,1346);
+      this.y = random(20,748);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.delay -= 200; 
+        this.alive = false;
+      }
+   }
+}
+
+
+
+// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
+class healthPowerUp extends PhysObj {
+  
+   healthPowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #009900; //green
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        player.health += 10; 
+        this.alive = false;
+      }
+   }
 }

@@ -1,5 +1,4 @@
 
-// event handler
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -24,10 +23,7 @@ float dist2(float x1, float y1, float x2, float y2) {
 
 
 
-//-------------------------------------------------------------------------------------------
-
-
-
+//---------------blood object just incase we need it----------------------------------------------------
 
 // Blood objects move in a fixed direction away from their starting position, but with friction so
 // they slow down with time. They also have their radius linked to their velocity, so they shrink 
@@ -68,20 +64,18 @@ LinkedList<PhysObj> entities;
 LinkedList<PhysObj> new_entities;
 
 
-
-
 // --------------------------------------------------------------------------------------------
 // Event handlers
 // --------------------------------------------------------------------------------------------
 
 // Image variable to store image.
-PImage r, spriteSheet,health,score; //hero
+PImage r, spriteSheet_hero,spriteSheet_monster,health,score; 
 
 // creates a sprite object
-sprite walker;
+sprite_hero walker;       // hero
+sprite_monster m_walker;  // monster
 
-
-  int time;
+int time;
 void setup() {
   
   // Setup for background music
@@ -94,14 +88,15 @@ void setup() {
   
   // load background and hero images.
   r = loadImage ("room.png");
-  spriteSheet = loadImage("player.png");
-  //hero = loadImage ("ironman.png");
+  spriteSheet_hero = loadImage("player.png");
+  spriteSheet_monster = loadImage("monster.png");
   health = loadImage ("hud_heartFull.png");
   score = loadImage ("hud_coins.png");
   imageMode(CENTER);
   
   // start the object sprite
-  walker = new sprite();
+  walker = new sprite_hero();
+  m_walker = new sprite_monster();
   
   size(1366,768);
   surface.setResizable(true);
@@ -157,13 +152,13 @@ void draw() {
   }
   
   // Spawn a powerUp at random
-  if(random(0,2000) <= 1){
+  if(random(0,1000) <= 1){
     spawnPowerUp();    
   }
   
   // Spawn an enemy every once in a while
-  if(random(0,50) <= 1){
-   spawnEnemy();
+  if(random(0,120) <= 1){
+   spawnEnemy(100,100);   //this function now takes x,y as position.
   }
 
   

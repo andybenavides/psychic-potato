@@ -4,11 +4,12 @@
 class Enemy extends PhysObj {
   
  Enemy() {
-   DIAMETER = 40; // Smaller than the player
+   DIAMETER = 70; // Smaller than the player
    COLOR = #000000; // black
    health = 200;
    Is_Enemy = true;
  }
+ 
  
  public void pursue(PhysObj target, float strength){
    float dx = x - target.x; 
@@ -22,6 +23,7 @@ class Enemy extends PhysObj {
    ax += dx * strength / l;
    ay += dy * strength / l;
   }
+ 
  
  public void accelerate(float dt) {
    
@@ -40,23 +42,30 @@ class Enemy extends PhysObj {
  }
   
  public void collide(float newx, float newy) {
-    
+   // edges
+   // Crossing left edge?
+    // Crossing left edge?
+    if(newx - DIAMETER/0.8 < 0)
+      vx = abs(vx); // Force to positive
+    else if(newx + DIAMETER/0.8 >= width) // Right edge?
+      vx = -abs(vx); // Force to negative
+      
+    // Crossing top edge?
+    if(newy - DIAMETER/0.9 < 0)
+      vy = abs(vy); 
+    else if(newy + DIAMETER/0.6 >= height) // Bottom edge?
+      vy = -abs(vy);
+   
    // Collision with player?
    if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
-     alive = false;
+     //alive = false;
      playAudio(damage);
      player.health -= 100;
      //explode(x,y,vx + player.vx, vy + player.vy);
    }
-    
-   // Outside the window?
-   if(newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
-      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
-     alive = false; // die silently
-   }
- }
-  
+ } 
 }
+
 
 class Seeker extends PhysObj {
   
