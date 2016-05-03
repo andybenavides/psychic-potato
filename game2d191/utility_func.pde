@@ -8,85 +8,73 @@
 void shoot() {
 
   Bullet b = new Bullet();
-  b.x = player.x; b.y = player.y;
+  b.x = player.x; 
+  b.y = player.y;
   b.dx = cos(PI * (player.heading)/180 );
   b.dy = sin(PI * (player.heading)/180 );
   playAudio(shoot);
   spawn(b);
-
 }
 
-//--------------------------------------------------------------------------------------
 void spawn(PhysObj o) {
   new_entities.add(o);
 }
- 
-//--- for blood in case we need it-------------------------------------------------------------
-// Spawn an explosion at (x,y) with a velocity tending in the direction of (dx,dy)
-//void explode(float x, float y, float dx, float dy) {
-//  // An explosion consists of 15-20 blood particles, with random velocities. The problem is that
-//  // if we generate random velocities with both components drawn from [-1,1] then we will be 
-//  // constructing random vectors in a unit *square*, giving us a decidedly square-shaped explosion.
-//  // We can fix this by generating random polar coordinates and then transforming them back into
-//  // euclidean space, or (the easier way), just throw out any vectors that are generated outside
-//  // a unit circle. This may result in fewer particles than we'd like, so we just keep generating them
-//  // until we have enough.
-//  int pcount = (int)random(10,16);
-//  int i = 0;
-//  while(i < pcount) {
-//    float vx = random(-1,1);
-//    float vy = random(-1,1);
-    
-//    if(dist(0,0,vx,vy) > 1.0)
-//      continue; // skip
-      
-//    PhysObj b = new Blood();
-//    b.x = x; b.y = y;
-//    b.vx = 0.3*vx + dx; b.vy = 0.3*vy + dy;
-//    spawn(b);
-//    i++;
-//  }
-//}
 
+void spawnPowerUp() {
 
-void spawnPowerUp(){
-  
-  int rand = (int)random(0,3);
-  
-  switch(rand){
-     case 1:
-       PhysObj hpu = new healthPowerUp();
-       hpu.x=random(200,1166);
-       hpu.y=random(200,568);
-       spawn(hpu);
-       break;
-     case 0:
-       PhysObj spu = new shootingSpeedPowerUp();
-       spu.x=random(200,1166);
-       spu.y=random(200,568);
-       spawn(spu);
-       break;
-     case 2:
-       PhysObj dpu = new damagePowerUp();
-       dpu.x=random(200,1166);
-       dpu.y=random(200,568);
-       spawn(dpu);
-     default:
-       break;
+  int rand = (int)random(0, 3);
+
+  switch(rand) {
+  case 1:
+    PhysObj hpu = new healthPowerUp();
+    hpu.x=random(200, 1166);
+    hpu.y=random(200, 568);
+    spawn(hpu);
+    break;
+  case 0:
+    PhysObj spu = new shootingSpeedPowerUp();
+    spu.x=random(200, 1166);
+    spu.y=random(200, 568);
+    spawn(spu);
+    break;
+  case 2:
+    PhysObj dpu = new damagePowerUp();
+    dpu.x=random(200, 1166);
+    dpu.y=random(200, 568);
+    spawn(dpu);
+  case 3:
+    PhysObj tpu = new timeBasedPowerUp();
+    tpu.x=random(200, 1166);
+    tpu.y=random(200, 1166);
+    tpu.vx=0.1;
+    tpu.vy=0.1;
+    spawn(tpu);
+  default:
+    break;
   }
 }
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
 // off, because then they'd die immediately) with a velocity vector that points onto the window.
-void spawnEnemy(float x, float y) {
- PhysObj e = new Enemy();
-     //int edge = 0;
-     e.y = x; // edge == 0 ? 2 - e.DIAMETER/2 : (height - 2) + e.DIAMETER/2;
-     e.x = y; //random(e.DIAMETER,width-e.DIAMETER);
-     e.vy = .1; //edge == 0 ? 1 : -1; 
-     e.vx = .1; //e.x < width/2 ? random(0,1) : random(-1,0)
-     spawn(e);
- 
+void spawnEnemy() {
+  PhysObj e = new Enemy();
+  // Spawn enemy in random position that fits within frame.
+  e.y = random(20, 700);
+  e.x = random(20, 1000); 
+  // Adjust enemy speed based on current level
+  switch(currLevel) {
+  case 1:
+    e.vx = 0.1;
+    e.vy = 0.1;
+    break;
+  case 2:
+    e.vx = 0.15;
+    e.vy = 0.15;
+    break;
+  default:
+    break;
+  } 
+  spawn(e);
 }
 
 // class for creating a sprite with a spritesheet for hero
@@ -94,19 +82,18 @@ void spawnEnemy(float x, float y) {
 class sprite_hero {
   PImage cell[];
   int cnt = 0, step = 0, dir = 0;
-  
+
   sprite_hero() {
     cell = new PImage[12];
     for (int y = 0; y < 4; y++)
       for (int x = 0; x < 3; x++)
-        cell[y*3+x] = spriteSheet_hero.get(x*147,y*120, 147,120);     
+        cell[y*3+x] = spriteSheet_hero.get(x*147, y*120, 147, 120);
   }
-  
+
   void turn(int _dir) {
     if (_dir >= 0 && _dir < 4) dir = _dir;
-    //println (dir);
   }
-  
+
   void check(float a, float b) {
     if (cnt++ > 7) {
       cnt = 0;
@@ -114,20 +101,20 @@ class sprite_hero {
       if (step >= 4) 
         step = 0;
     }
-    
+
     // check input, if player is walking then display animation.
     if (player.input_up == 1 || player.input_down == 1
-        || player.input_left == 1 || player.input_right == 1)
+      || player.input_left == 1 || player.input_right == 1)
     {
       int idx = dir*3+ (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+      image(cell[idx], a, b, cell[idx].width*1.2, cell[idx].height*1.2 );
     }
-    
+
     // check input, if player is not walking, just display standing.
     else
     {
       int idx = dir*3;// + (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+      image(cell[idx], a, b, cell[idx].width*1.2, cell[idx].height*1.2 );
     }
   }
 }
@@ -138,19 +125,19 @@ class sprite_hero {
 class sprite_monster {
   PImage cell[];
   int cnt = 0, step = 0, dir = 0;
-  
+
   sprite_monster() {
     cell = new PImage[6];
     for (int y = 0; y < 2; y++)
       for (int x = 0; x < 3; x++)
-        cell[y*3+x] = spriteSheet_monster.get(x*77,y*102,77,102);     
+        cell[y*3+x] = spriteSheet_monster.get(x*77, y*102, 77, 102);
   }
-  
+
   void turn(int _dir) {
     if (_dir >= 0 && _dir < 4) dir = _dir;
     //println (dir);
   }
-  
+
   void check(float a, float b) {
     if (cnt++ > 7) {
       cnt = 0;
@@ -158,11 +145,10 @@ class sprite_monster {
       if (step >= 4) 
         step = 0;
     }
-    
-    
-      int idx = dir*3+ (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
-    
+
+
+    int idx = dir*3+ (step == 3 ? 1 : step);
+    image(cell[idx], a, b, cell[idx].width*1.2, cell[idx].height*1.2 );
   }
 }
 
@@ -173,12 +159,12 @@ class sprite_monster {
 void delay(int delay)
 {
   int time = millis();
-  while(millis() - time <= delay);
+  while (millis() - time <= delay);
 }
 
 //---------------------------------------------------
 //  Helper function for audio looping
-void playAudio(AudioPlayer a){
-   a.play();
-   a.rewind();
+void playAudio(AudioPlayer a) {
+  a.play();
+  a.rewind();
 }
