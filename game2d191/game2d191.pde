@@ -74,6 +74,7 @@ PImage r, spriteSheet_hero,spriteSheet_monster,health,score;
 // creates a sprite object
 sprite_hero walker;       // hero
 sprite_monster m_walker;  // monster
+sprite_seeker s_walker;   // seeker
 
 int time;
 void setup() {
@@ -97,6 +98,7 @@ void setup() {
   // start the object sprite
   walker = new sprite_hero();
   m_walker = new sprite_monster();
+  s_walker = new sprite_seeker();
   
   size(1366,768);
   surface.setResizable(true);

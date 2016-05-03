@@ -8,6 +8,7 @@ class PhysObj {
   boolean alive = true;
   boolean Is_Hero = false;
   boolean Is_Enemy = false;
+  boolean Is_Seeker = false;
   
   public int health;
 
@@ -51,6 +52,10 @@ class PhysObj {
     }
     else if(alive && Is_Enemy){
        m_walker.check(x,y);
+    }
+    
+    else if(alive && Is_Seeker){
+       s_walker.check(x,y); 
     }
     else if(alive) {
        fill(COLOR);

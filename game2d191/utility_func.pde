@@ -115,26 +115,28 @@ class sprite_hero {
         step = 0;
     }
     
-    // check input, if player is walking then display animation.
-    if (player.input_up == 1 || player.input_down == 1
-        || player.input_left == 1 || player.input_right == 1)
-    {
-      int idx = dir*3+ (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
-    }
-    
-    // check input, if player is not walking, just display standing.
-    else
-    {
-      int idx = dir*3;// + (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
-    }
+      // check input, if player is walking then display animation.
+      if (player.input_up == 1 || player.input_down == 1
+          || player.input_left == 1 || player.input_right == 1)
+      {
+        int idx = dir*3+ (step == 3 ? 1 : step);
+        image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+      }
+      
+      // check input, if player is not walking, just display standing.
+      else
+      {
+        int idx = dir*3;// + (step == 3 ? 1 : step);
+        image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+      }
   }
+
 }
 
 //-----------------------------------------------------------------------------
 // class for creating a sprite with a spritesheet for monster
 //--------------------------sprite------------------------------------------------------------
+
 class sprite_monster {
   PImage cell[];
   int cnt = 0, step = 0, dir = 0;
@@ -146,25 +148,48 @@ class sprite_monster {
         cell[y*3+x] = spriteSheet_monster.get(x*77,y*102,77,102);     
   }
   
-  void turn(int _dir) {
-    if (_dir >= 0 && _dir < 4) dir = _dir;
-    //println (dir);
+  void check(float a, float b) {
+    if (cnt++ > 10) {
+      cnt = 0;
+      step++;
+      if (step >= 3) 
+        step = 0;
+    }
+    
+      int idx =  (step == 3 )? 1 : step;
+      image(cell[idx], a, b );
+    
+  }
+}
+
+// class for creating a sprite with a spritesheet for monster
+//--------------------------sprite------------------------------------------------------------
+
+class sprite_seeker {
+  PImage cell[];
+  int cnt = 0, step = 0, dir = 0;
+  
+  sprite_seeker() {
+        cell = new PImage[6];
+    for (int y = 0; y < 2; y++)
+      for (int x = 0; x < 3; x++)
+        cell[y*3+x] = spriteSheet_monster.get(x*154,y*102,77,102);        
   }
   
   void check(float a, float b) {
     if (cnt++ > 7) {
       cnt = 0;
       step++;
-      if (step >= 4) 
+      if (step >= 3) 
         step = 0;
     }
     
-    
-      int idx = dir*3+ (step == 3 ? 1 : step);
-      image(cell[idx], a, b,cell[idx].width*1.2, cell[idx].height*1.2 );
+      int idx = (step == 3 ? 1 : step);
+      image(cell[idx], a, b);
     
   }
 }
+
 
 //-----------------------------------------------------------------------------------
 
