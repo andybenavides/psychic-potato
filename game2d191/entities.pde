@@ -79,7 +79,7 @@ class Player extends PhysObj {
   float heading;
   float fx, fy;
   boolean shooting = false;
-  boolean canShoot = true;
+  public boolean canShoot = true;
   int delay = 500;
   int stime = 0;
   int score = 0;
@@ -111,7 +111,7 @@ class Player extends PhysObj {
          stime = millis();//also update the stored time
     }
   
-    if(player.shooting == true && dt >= .1 && player.canShoot == true) {
+    if(player.shooting == true && player.canShoot == true) {
       shoot();
       player.canShoot = false;
     }
@@ -139,12 +139,13 @@ class Bullet extends PhysObj{
   
   Bullet(){
     this.COLOR = #DC1405;
+
   }
   
   public float x,y;
   public float dx = 0, dy = 0;
   
-  public float lifetime = 1000;
+  public float lifetime = 800;
   
   void move(float dt) {
     x += dx * dt;
@@ -173,8 +174,12 @@ class Bullet extends PhysObj{
     float l = dist(dx,dy,0,0); 
     float x1 = x + 4*dx/l, y1 = y + 4*dy/l, x2 = x - 4*dx/l, y2 = y - 4*dy/l;
     
-    
-    ellipse(x1,y1,10,10);
+    if(bigshot == false){
+      ellipse(x1,y1,10,10);
+    }
+    else{
+      ellipse(x1,y1,25,25);
+    }
     color(#DC1405);
     stroke(color(0,128,255,128));
     strokeWeight(8);
@@ -217,10 +222,13 @@ class timeBasedPowerUp extends PhysObj{
         timeBasedPowerUp = true;
       }
    }
+
    
 }
 
 class damagePowerUp extends PhysObj {
+  
+   int stime;
   
    damagePowerUp(){
       DIAMETER = 40;
@@ -234,11 +242,22 @@ class damagePowerUp extends PhysObj {
         playAudio(acquirePowerUp);
         player.damage += 100;
         this.alive = false;
+        stime=0;
       }
    }
+   //void draw(){
+   //     if(millis() - stime >= 3000){
+   //      stime = millis();//also update the stored time
+   //     textSize(50);
+   //     fill(#ffffff);
+   //     text("+ Damnage", width/2 - 150, 100);
+   //  }
+   //}
+
 }
 
 class shootingSpeedPowerUp extends PhysObj {
+   int stime;
   
    shootingSpeedPowerUp(){
       DIAMETER = 50;
@@ -250,10 +269,19 @@ class shootingSpeedPowerUp extends PhysObj {
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
         playAudio(acquirePowerUp);
-        player.delay -= 200; 
+        player.delay -= 100; 
         this.alive = false;
+        stime=0;
       }
    }
+   //void draw(){
+   //     if(millis() - stime >= 3000){
+   //      stime = millis();//also update the stored time
+   //     textSize(50);
+   //     fill(#ffffff);
+   //     text("+ Damnage", width/2 - 150, 100);
+   //  }
+   //}
 }
 
 
@@ -271,8 +299,81 @@ class healthPowerUp extends PhysObj {
    public void collide(float newx, float newy){
       if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
         playAudio(acquirePowerUp);
-        player.health += 10; 
+        player.health += 20; 
         this.alive = false;
       }
    }
+}
+
+//increases the amount of time bullets are allowed to stay 'alive' for which translates to more range
+class rangePowerUp extends PhysObj {
+  
+   rangePowerUp(){
+      DIAMETER = 50;
+      this.COLOR = #FF69B4; //pink
+      this.x = random(0,1366);
+      this.y = random(0,768);
+   }
+   
+   public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        rangeModifier += 200;
+        this.alive = false;
+      }
+   }
+}
+
+//-------------------------------------------------------
+//------------------- Special Items ---------------------
+//-------------------------------------------------------
+
+//two shots insead of one, stacked on each other in the y-direction
+class itemDoubleShot extends PhysObj {
+  itemDoubleShot(){
+    DIAMETER = 50;
+    this.COLOR = #009873;
+    this.x = 1300;
+    this.y = height/2;
+  }
+  public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        doubleshot = true;
+        this.alive = false;
+      }
+  }
+}
+  //increases the bullet diameter, makes it a bit easier to hit
+  class itemBigShot extends PhysObj {
+  itemBigShot(){
+    DIAMETER = 60;
+    this.COLOR = #003832;
+    this.x = 1200;
+    this.y = height/2;
+  }
+  public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        bigshot = true; // 8)
+        this.alive = false;
+      }
+  }
+}
+
+  //two addition bullets are fired at 45 degree angle relative to the player's direction
+  class itemAngleShot extends PhysObj {
+  itemAngleShot(){
+    DIAMETER = 60;
+    this.COLOR = #023832;
+    this.x = 1000;
+    this.y = height/2;
+  }
+  public void collide(float newx, float newy){
+      if(dist(newx,newy,player.x,player.y) < (DIAMETER + player.DIAMETER) / 2 - 6){
+        playAudio(acquirePowerUp);
+        angleShot = true;
+        this.alive = false;
+      }
+  }
 }

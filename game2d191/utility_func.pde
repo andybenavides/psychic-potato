@@ -11,9 +11,31 @@ void shoot() {
   b.x = player.x; b.y = player.y;
   b.dx = cos(PI * (player.heading)/180 );
   b.dy = sin(PI * (player.heading)/180 );
+  b.lifetime += rangeModifier;
+  if(doubleshot == true){
+      Bullet b2 = new Bullet();
+      b2.x = player.x; b2.y = player.y + 20;
+      b2.dx = cos(PI * (player.heading)/180 );
+      b2.dy = sin(PI * (player.heading)/180 );
+      b2.lifetime += rangeModifier;
+      spawn(b2);
+  }
+  if(angleShot == true){
+      Bullet b3 = new Bullet();
+      b3.x = player.x; b3.y = player.y;
+      b3.dx = cos(PI * (player.heading + 45) /180 );
+      b3.dy = sin(PI * (player.heading + 45) /180);
+      b3.lifetime += rangeModifier;
+      spawn(b3);
+      Bullet b4 = new Bullet();
+      b4.x = player.x; b4.y = player.y;
+      b4.dx = cos(PI * (player.heading - 45) /180 );
+      b4.dy = sin(PI * (player.heading - 45) /180 );
+      b4.lifetime += rangeModifier;
+      spawn(b4);
+  }
   playAudio(shoot);
   spawn(b);
-
 }
 
 //--------------------------------------------------------------------------------------
@@ -51,7 +73,7 @@ void spawn(PhysObj o) {
 
 void spawnPowerUp(){
   
-  int rand = (int)random(0,3);
+  int rand = (int)random(0,4);
   
   switch(rand){
      case 1:
@@ -71,6 +93,11 @@ void spawnPowerUp(){
        dpu.x=random(200,1166);
        dpu.y=random(200,568);
        spawn(dpu);
+     case 3:
+       PhysObj rpu = new rangePowerUp();
+       rpu.x=random(200,1166);
+       rpu.y=random(200,568);
+       spawn(rpu);
      default:
        break;
   }

@@ -15,7 +15,10 @@ long elapsed_time;
 float startTime,endTime;
 float INPUT_ACCEL = 0.004;
 boolean timeBasedPowerUp;
-
+boolean doubleshot = false;
+boolean bigshot = false;
+boolean angleShot = false;
+int rangeModifier = 0;
 
 float dist2(float x1, float y1, float x2, float y2) {
   return sq(x1-x2) + sq(y1-y2);
@@ -282,7 +285,16 @@ void keyReleased() {
       exit();
     case 'B':
       PhysObj tpu = new timeBasedPowerUp();
-      spawn(tpu);
+      spawn(tpu); break;
+    case 'N':
+      PhysObj ds = new itemDoubleShot();
+      spawn(ds); break;
+    case 'M':
+      PhysObj bs = new itemBigShot();
+      spawn(bs); break;
+    case ',':
+      PhysObj as = new itemAngleShot();
+      spawn(as); break;
     default: 
       break;
   }  
