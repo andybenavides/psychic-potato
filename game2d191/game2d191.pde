@@ -1,5 +1,3 @@
-
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import ddf.minim.*;
@@ -15,15 +13,12 @@ long elapsed_time;
 float startTime, endTime;
 float INPUT_ACCEL = 0.004;
 boolean timeBasedPowerUp;
-
 boolean doubleshot = false;
 boolean bigshot = false;
 boolean angleShot = false;
 int rangeModifier = 0;
 
-
 int currLevel = 1;
-
 
 
 float dist2(float x1, float y1, float x2, float y2) {
@@ -48,8 +43,12 @@ sprite_hero walker;       // hero
 sprite_monster m_walker;  // monster
 sprite_seeker s_walker;   // seeker
 
+
 int time;
 void setup() {
+  
+  PFont font;
+  font = createFont("ARCADECLASSIC.ttf", 32);
 
   // Setup for background music
   minim = new Minim(this);
@@ -70,14 +69,9 @@ void setup() {
   // start the object sprite
   walker = new sprite_hero();
   m_walker = new sprite_monster();
-<<<<<<< HEAD
   s_walker = new sprite_seeker();
-  
-  size(1366,768);
-=======
 
   size(1366, 768);
->>>>>>> origin/master
   surface.setResizable(true);
   // Clearing the background here is not strictly necessary, as the game loop will do it at the
   // beginning of each frame anyway.
@@ -185,10 +179,13 @@ void draw() {
     text("ends in: "+(int)(startTime/1000+5-endTime/1000), 500, 700);
   }
 
+  PFont font;
+  font = createFont("ARCADECLASSIC.TTF", 32);
+  textFont(font);
   textSize(20);
-  fill(#ffff00);
-  text("Strength level: "+player.damage/100, 1000, 100);
-  text("Level: "+currLevel, 1200, 100);
+  fill(#ffffff);
+  text("Strength level "+player.damage/100, 1000, 100);
+  text("Level "+currLevel, 1200, 100);
 
   if ((player.score % 100 == 0) && (millis() - t <= 3000)) {
     textSize(75);
@@ -201,8 +198,6 @@ void draw() {
     textSize(50);
     fill(#ffffff);
     text("GAME OVER", width/2 - 150, height/2);
-    textSize(35);
-    text("Basically, you're bad", width/2 - 165, height/2 + 50);
     noLoop();
   }
 }
@@ -275,27 +270,35 @@ void keyPressed() {
 
 void keyReleased() {
   switch(keyCode) {
-    case 'A':
-      player.input_left = 0; break;
-    case 'D':
-      player.input_right = 0; break;
-    case 'W':
-      player.input_up = 0; break;
-    case 'S':
-      player.input_down = 0; break;
-    case LEFT:
-      player.shooting = false; break;
-    case RIGHT:
-      player.shooting = false; break;
-    case UP:
-      player.shooting = false; break;
-    case DOWN:
-      player.shooting = false; break;
-    case 'Q':
-      exit();
-    case 'B':
-      PhysObj tpu = new timeBasedPowerUp();
-      spawn(tpu); break;
+  case 'A':
+    player.input_left = 0; 
+    break;
+  case 'D':
+    player.input_right = 0; 
+    break;
+  case 'W':
+    player.input_up = 0; 
+    break;
+  case 'S':
+    player.input_down = 0; 
+    break;
+  case LEFT:
+    player.shooting = false; 
+    break;
+  case RIGHT:
+    player.shooting = false; 
+    break;
+  case UP:
+    player.shooting = false; 
+    break;
+  case DOWN:
+    player.shooting = false; 
+    break;
+  case 'Q':
+    exit();
+  case 'B':
+    PhysObj tpu = new timeBasedPowerUp();
+    spawn(tpu); break;
     case 'N':
       PhysObj ds = new itemDoubleShot();
       spawn(ds); break;
@@ -305,7 +308,7 @@ void keyReleased() {
     case ',':
       PhysObj as = new itemAngleShot();
       spawn(as); break;
-    default: 
-      break;
-  }  
+  default: 
+    break;
+  }
 }
