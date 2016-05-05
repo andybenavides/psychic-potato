@@ -404,6 +404,67 @@ class itemBigShot extends PhysObj {
   }
 }
 
+class itemBomb extends PhysObj {
+    itemBomb() {
+    DIAMETER = 40;
+    COLOR = #000000;
+    x = random(200, 1000);
+    y = random(200, 568);
+    vx = -(player.vx);
+    vy = -(player.vy);
+    health = 100;
+  }
+  public void collide(float newx, float newy) {
+    if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
+      playAudio(acquirePowerUp);
+      for(int i = 0; i<360; i=i+36){
+        Bullet b = new Bullet();
+        b.x = this.x; 
+        b.y = this.y;
+        b.dx = cos(PI * (i)/180 );
+        b.dy = sin(PI * (i)/180 );
+        b.lifetime += rangeModifier;
+        spawn(b);
+      }
+      alive = false;
+    }
+    // Crossing left edge?
+    if (newx - DIAMETER/0.8 < 0) {
+      vx = abs(vx); // Force to positive
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newx + DIAMETER/0.8 >= width) { // Right edge?
+      vx = -abs(vy); // Force to negative
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+
+    // Crossing top edge?
+    if (newy - DIAMETER/0.9 < 0) {
+      vy = abs(vy); 
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newy + DIAMETER/0.6 >= height) { // Bottom edge?
+      vy = -abs(vy);
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+    // Outside the window?
+    if (newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+      alive = false; // die silently
+    }
+  }
+}
+
 //two addition bullets are fired at 45 degree angle relative to the player's direction
 class itemAngleShot extends PhysObj {
   itemAngleShot() {
