@@ -49,7 +49,7 @@ void spawn(PhysObj o) {
 // When called within the draw() function this function will choose an integer at random from 0 to 9
 // Then switch on that integer to determine what power up to spawn
 void spawnPowerUp() {
-  int rand = (int)random(0, 9);
+  int rand = (int)random(0, 10);
 
   switch(rand) {
   case 0:
@@ -99,6 +99,12 @@ void spawnPowerUp() {
     ds.x=random(100, 1166);
     ds.y=random(100, 568);
     spawn(ds);
+      break;
+  case 8:
+    PhysObj b = new itemBomb();
+    b.x=random(100, 1166);
+    b.y=random(100, 568);
+    spawn(b);
       break;
   default:
     break;

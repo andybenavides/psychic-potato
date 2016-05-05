@@ -380,8 +380,8 @@ void keyReleased() {
     spawn(rpu);
     break;
   case ',':
-    PhysObj spu = new shootingSpeedPowerUp();
-    spawn(spu);
+    PhysObj b = new itemBomb();
+    spawn(b);
     break;
   default: 
     break;
