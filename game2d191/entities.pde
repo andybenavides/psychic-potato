@@ -1,18 +1,16 @@
-
 // entities: PhysObj, player, bullets, power ups.
 // enemies have a separate file.
 
+// The PhysObj class provides the parent characteristics for every item interactable on screen
 class PhysObj {
-
   boolean alive = true;
   boolean Is_Hero = false;
   boolean Is_Enemy = false;
   boolean Is_Seeker = false;
 
-
   public int health;
-
   public int DIAMETER = 50;
+
   public color COLOR;
 
   public float x, y;            // Position
@@ -71,6 +69,9 @@ class PhysObj {
 // The Player class responds to player input, and has friction and collision with the borders of the
 // window.
 int stime = millis();
+
+// Player class is derived from the PhysObj class
+// The Player class handles hero sprite movement as well as shooting mechanics and collision with walls
 class Player extends PhysObj {
 
   float input_right, input_left, input_up, input_down;
@@ -114,26 +115,23 @@ class Player extends PhysObj {
     }
   }
 
-  // Handle collision with the edges of the window
   void collide(float newx, float newy) {
-    // Crossing left edge?
     if (newx - DIAMETER/0.6 < 0)
-      vx = 0; // Force to positive
-    else if (newx + DIAMETER/0.6 >= width) // Right edge?
-      vx = 0; // Force to negative
+      vx = 0;
+    else if (newx + DIAMETER/0.6 >= width)
+      vx = 0; 
 
-    // Crossing top edge?
     if (newy - DIAMETER/0.95 < 0)
       vy = 0; 
-    else if (newy + DIAMETER/0.45 >= height) // Bottom edge?
+    else if (newy + DIAMETER/0.45 >= height) 
       vy = 0;
   }
 }
 
+// The Bullet class handles collision detection between bullets and enemies
+// Bullet class provides score increment when a kill has been logged
 class Bullet extends PhysObj {
-
   Bullet() {
-    this.COLOR = #DC1405;
   }
 
   public float x, y;
@@ -155,7 +153,9 @@ class Bullet extends PhysObj {
       if (o.Is_Hero == false)
         if (dist(x, y, o.x, o.y) < 50) {
           o.health -= player.damage;
-          this.alive = false;
+          if (player.damage <= 300) {
+            alive = false;
+          }
         }
     }
   }
@@ -163,16 +163,15 @@ class Bullet extends PhysObj {
   void draw() {
     float l = dist(dx, dy, 0, 0); 
     float x1 = x + 4*dx/l, y1 = y + 4*dy/l, x2 = x - 4*dx/l, y2 = y - 4*dy/l;
-
+    stroke(#3c69ff, 90);
+    strokeWeight(2);
+    fill(#fefefe);
 
     if (bigshot == false) {
-      ellipse(x1, y1, 10, 10);
+      ellipse(x1, y1, 15, 15);
     } else {
-      ellipse(x1, y1, 25, 25);
-    }    
-    color(#DC1405);
-    stroke(color(0, 128, 255, 128));
-    strokeWeight(8);
+      ellipse(x1, y1, 60, 60);
+    }
   }
 
   void collide(float dt) {
@@ -187,84 +186,88 @@ class Bullet extends PhysObj {
   }
 }
 
-//-------Power Ups----------------------------------------
-//--------------------------------------------------------
+// ----------------------- //
+// ------ Power Ups ------ //
+// ----------------------- //
 
+// Time based power ups alter the INPUT_ACCEL and can_shoot flag for a small period of time
+// Although more of a pain than a power up, this power up forces slower motion and the inability to shoot for the Player
 class timeBasedPowerUp extends PhysObj {
   timeBasedPowerUp() {
     DIAMETER = 50;
-    this.COLOR = #ffffff;
-    this.x = random(200, 1166);
-    this.y = random(200, 568);
+    COLOR = #ffffff;
+    x = random(150, 1166);
+    y = random(150, 568);
   }
 
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       startTime = millis();
       playAudio(acquirePowerUp);
-      player.canShoot = false;
-      this.alive = false;
+      alive = false;
       INPUT_ACCEL = 0.001;
       timeBasedPowerUp = true;
     }
   }
 }
 
+// The damage power up increases the players damage rating
+// This class will increment the damage by 100 
 class damagePowerUp extends PhysObj {
   int stime;
 
   damagePowerUp() {
     DIAMETER = 40;
-    this.COLOR = #ffff00; // yellow
-    this.x = random(20, 1346);
-    this.y = random(20, 748);
+    COLOR = #ffff00; // yellow
+    x = random(20, 1346);
+    y = random(20, 748);
   }
 
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
       player.damage += 100;
-      this.alive = false;
+      alive = false;
     }
   }
 }
 
+// Shooting speed lowers the amount of delay forced between bullets fired
+// This class will allow the Player to shoot for frequently with less delay between bullets
 class shootingSpeedPowerUp extends PhysObj {
-
   int stime;
   shootingSpeedPowerUp() {
     DIAMETER = 50;
-    this.COLOR = #0000ff; // blue
-    this.x = random(20, 1346);
-    this.y = random(20, 748);
+    COLOR = #0000ff; // blue
+    x = random(20, 1346);
+    y = random(20, 748);
   }
 
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
-      player.delay -= 100; 
-      this.alive = false;
+      player.delay -= 50; 
+      alive = false;
     }
   }
 }
 
-
-
-// The powerUp class will act as a physical object but will offer some form of upgrade to the player 
+// The health power up will give the Player a health boost of 100 unless the Player is already at max health
 class healthPowerUp extends PhysObj {
-
   healthPowerUp() {
     DIAMETER = 50;
-    this.COLOR = #009900; //green
-    this.x = random(0, 1366);
-    this.y = random(0, 768);
+    COLOR = #009900; //green
+    x = random(100, 1366);
+    y = random(100, 768);
   }
 
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
-      player.health += 100; 
-      this.alive = false;
+      if (player.health < 1000) {
+        player.health += 100;
+      }
+      alive = false;
     }
   }
 }
@@ -274,52 +277,129 @@ class rangePowerUp extends PhysObj {
 
   rangePowerUp() {
     DIAMETER = 50;
-    this.COLOR = #FF69B4; //pink
-    this.x = random(0, 1366);
-    this.y = random(0, 768);
+    COLOR = #FF69B4; //pink
+    x = random(50, 1366);
+    y = random(50, 768);
   }
 
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
       rangeModifier += 200;
-      this.alive = false;
+      alive = false;
     }
   }
 }
-//-------------------------------------------------------
-//------------------- Special Items ---------------------
-//-------------------------------------------------------
+
+// ------------------------------------------------------- //
+// ------------------- Special Items --------------------- // 
+// ------------------------------------------------------- //
+
+// When special items are spawned they are spawned with motion and can only survive 2 wall collisions
 
 //two shots insead of one, stacked on each other in the y-direction
 class itemDoubleShot extends PhysObj {
   itemDoubleShot() {
-    DIAMETER = 50;
-    this.COLOR = #009873;
-    this.x = random(200,1000);
-    this.y = random(200,568);
+    DIAMETER = 40;
+    COLOR = #009873;
+    x = random(200, 1000);
+    y = random(200, 568);
+    vx = -(player.vx);
+    vy = -(player.vy);
+    health = 100;
   }
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
       doubleshot = true;
-      this.alive = false;
+      alive = false;
+    }
+    // Crossing left edge?
+    if (newx - DIAMETER/0.8 < 0) {
+      vx = abs(vx); // Force to positive
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newx + DIAMETER/0.8 >= width) { // Right edge?
+      vx = -abs(vy); // Force to negative
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+
+    // Crossing top edge?
+    if (newy - DIAMETER/0.9 < 0) {
+      vy = abs(vy); 
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newy + DIAMETER/0.6 >= height) { // Bottom edge?
+      vy = -abs(vy);
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+    // Outside the window?
+    if (newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+      alive = false; // die silently
     }
   }
 }
+
 //increases the bullet diameter, makes it a bit easier to hit
 class itemBigShot extends PhysObj {
   itemBigShot() {
     DIAMETER = 70;
-    this.COLOR = #003832;
-    this.x = random(200,1000);
-    this.y = random(200,568);
+    COLOR = #003832;
+    x = random(200, 1000);
+    y = random(200, 568);
+    vx = -(player.vx);
+    vy = -(player.vy);
+    health = 100;
   }
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
       bigshot = true; // 8)
-      this.alive = false;
+      alive = false;
+    }// Crossing left edge?
+    if (newx - DIAMETER/0.8 < 0) {
+      vx = abs(vx); // Force to positive
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newx + DIAMETER/0.8 >= width) { // Right edge?
+      vx = -abs(vy); // Force to negative
+      health -= 50;
+      if (health <= 0) {
+        alive = false;
+      }
+    }
+
+    // Crossing top edge?
+    if (newy - DIAMETER/0.9 < 0) {
+      vy = abs(vy); 
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newy + DIAMETER/0.6 >= height) { // Bottom edge?
+      vy = -abs(vy);
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+    // Outside the window?
+    if (newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+      alive = false; // die silently
     }
   }
 }
@@ -327,16 +407,53 @@ class itemBigShot extends PhysObj {
 //two addition bullets are fired at 45 degree angle relative to the player's direction
 class itemAngleShot extends PhysObj {
   itemAngleShot() {
-    DIAMETER = 60;
-    this.COLOR = #023832;
-    this.x = random(200,1000);
-    this.y = random(200,568);
+    DIAMETER = 40;
+    COLOR = #023832;
+    x = random(200, 1000);
+    y = random(200, 568);
+    vx = -(player.vx);
+    vy = -(player.vy);
+    health = 100;
   }
   public void collide(float newx, float newy) {
     if (dist(newx, newy, player.x, player.y) < (DIAMETER + player.DIAMETER) / 2 - 6) {
       playAudio(acquirePowerUp);
       angleShot = true;
-      this.alive = false;
+      alive = false;
+    }
+    // Crossing left edge?
+    if (newx - DIAMETER/0.8 < 0) {
+      vx = abs(vx); // Force to positive
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newx + DIAMETER/0.8 >= width) { // Right edge?
+      vx = -abs(vy); // Force to negative
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+
+    // Crossing top edge?
+    if (newy - DIAMETER/0.9 < 0) {
+      vy = abs(vy); 
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    } else if (newy + DIAMETER/0.6 >= height) { // Bottom edge?
+      vy = -abs(vy);
+      health -= 50;
+      if ( health <= 0) {
+        alive = false;
+      }
+    }
+    // Outside the window?
+    if (newx < -DIAMETER/2 || newx >= width + DIAMETER/2 || 
+      newy < -DIAMETER/2 || newy >= height + DIAMETER/2) {
+      alive = false; // die silently
     }
   }
 }

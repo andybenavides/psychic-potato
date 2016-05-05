@@ -1,9 +1,9 @@
 
 // all the utility functions: shoot, spawning, sprite, audio, delay for shoot.
 
-// --------------------------------------------------------------------------------------------
+// ------------------------------
 // Utility functions
-// --------------------------------------------------------------------------------------------
+// ------------------------------
 
 void shoot() {
 
@@ -46,22 +46,23 @@ void spawn(PhysObj o) {
   new_entities.add(o);
 }
 
+// When called within the draw() function this function will choose an integer at random from 0 to 9
+// Then switch on that integer to determine what power up to spawn
 void spawnPowerUp() {
-
-  int rand = (int)random(0, 5);
+  int rand = (int)random(0, 9);
 
   switch(rand) {
-  case 1:
-    PhysObj hpu = new healthPowerUp();
-    hpu.x=random(200, 1166);
-    hpu.y=random(200, 568);
-    spawn(hpu);
-    break;
   case 0:
     PhysObj spu = new shootingSpeedPowerUp();
     spu.x=random(200, 1166);
     spu.y=random(200, 568);
     spawn(spu);
+    break;
+  case 1:
+    PhysObj hpu = new healthPowerUp();
+    hpu.x=random(200, 1166);
+    hpu.y=random(200, 568);
+    spawn(hpu);
     break;
   case 2:
     PhysObj dpu = new damagePowerUp();
@@ -71,19 +72,45 @@ void spawnPowerUp() {
     break;
   case 3:
     PhysObj tpu = new timeBasedPowerUp();
-    tpu.x=random(200, 1166);
-    tpu.y=random(200, 568);
-    tpu.vx=0.1;
-    tpu.vy=0.1;
+    tpu.x=random(100, 1166);
+    tpu.y=random(100, 568);
     spawn(tpu);
     break;
   case 4:
     PhysObj rpu = new rangePowerUp();
-    rpu.x=random(200,1166);
-    rpu.y=random(200,568);
+    rpu.x=random(200, 1166);
+    rpu.y=random(200, 568);
+    spawn(rpu);
+    break;
+  case 5:
+    PhysObj angle = new itemAngleShot();
+    angle.x=random(100, 1166);
+    angle.y=random(100, 600);
+    spawn(angle);
+    break;
+  case 6:
+    PhysObj big = new itemBigShot();
+    big.x=random(100, 1166);
+    big.y=random(100, 568);
+    spawn(big);
+    break;
+  case 7:
+    PhysObj ds = new itemDoubleShot();
+    ds.x=random(100, 1166);
+    ds.y=random(100, 568);
+    spawn(ds);
+      break;
   default:
     break;
   }
+}
+
+// Spawn a new seeker
+void spawnSeeker() {
+  PhysObj s = new Seeker();
+  s.x = random(20, 1166);
+  s.y = random(20, 700);
+  spawn(s);
 }
 
 // Spawn a new enemy. Enemies are spawned just slightly off the edge of the window (not completely
@@ -92,7 +119,7 @@ void spawnEnemy() {
   PhysObj e = new Enemy();
   // Spawn enemy in random position that fits within frame.
   e.y = random(20, 700);
-  e.x = random(20, 1000); 
+  e.x = random(20, 1166); 
   // Adjust enemy speed based on current level
   switch(currLevel) {
   case 1:
@@ -104,9 +131,22 @@ void spawnEnemy() {
     e.vy = 0.15;
     break;
   case 3:
-    e.vx = 0.2;
-    e.vy = 0.2;
+    e.vx = 0.18;
+    e.vy = 0.18;
     break;
+  case 4:
+    e.vx = 0.20;
+    e.vy = 0.20;
+  case 5:
+    e.vx = 0.25;
+    e.vy = 0.25;
+  case 6:
+    e.vx = 0.275;
+    e.vy = 0.275;
+    break;
+  case 7:
+    e.vx = 0.3;
+    e.vy = 0.3;
   default:
     break;
   } 
@@ -114,7 +154,7 @@ void spawnEnemy() {
 }
 
 // class for creating a sprite with a spritesheet for hero
-//--------------------------sprite------------------------------------------------------------
+// ------------------------- sprite ----------------------- //
 class sprite_hero {
   PImage cell[];
   int cnt = 0, step = 0, dir = 0;
@@ -181,7 +221,7 @@ class sprite_monster {
       if (step >= 4) 
         step = 0;
     }
-    
+
     int idx = dir*3+ (step == 3 ? 1 : step);
     image(cell[idx], a, b);
   }

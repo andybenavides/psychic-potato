@@ -1,3 +1,13 @@
+// CSCI 191-t (Game Development) term project
+// 2d top-down shooter
+// Psychic Potato
+//
+// Jose Benavides
+// Jimmy Leong
+// Tim Schwartz
+//
+
+// Imports
 import java.util.Iterator;
 import java.util.LinkedList;
 import ddf.minim.*;
@@ -7,46 +17,38 @@ import ddf.minim.*;
 Minim minim;
 AudioPlayer song, acquirePowerUp, shoot, damage;
 
-
+// Globals
 long start_time = -1;
 long elapsed_time; 
+
 float startTime, endTime;
 float INPUT_ACCEL = 0.004;
+
 boolean timeBasedPowerUp;
 boolean doubleshot = false;
 boolean bigshot = false;
 boolean angleShot = false;
+
 int rangeModifier = 0;
-
 int currLevel = 1;
-
-
-float dist2(float x1, float y1, float x2, float y2) {
-  return sq(x1-x2) + sq(y1-y2);
-}
+int time;
+public int t;
 
 // The player object
 Player player;
 LinkedList<PhysObj> entities;
 LinkedList<PhysObj> new_entities;
 
-
-// --------------------------------------------------------------------------------------------
-// Event handlers
-// --------------------------------------------------------------------------------------------
-
 // Image variable to store image.
-PImage r, spriteSheet_hero, spriteSheet_monster, health, score; 
+PImage r, spriteSheet_hero, spriteSheet_monster, health, score, bullet; 
 
 // creates a sprite object
 sprite_hero walker;       // hero
 sprite_monster m_walker;  // monster
 sprite_seeker s_walker;   // seeker
 
-
-int time;
+// Setup function
 void setup() {
-  
   PFont font;
   font = createFont("ARCADECLASSIC.ttf", 32);
 
@@ -56,7 +58,6 @@ void setup() {
   acquirePowerUp = minim.loadFile("powerUp.mp3");
   shoot = minim.loadFile("shoot.mp3");
   damage = minim.loadFile("damage.mp3");
-  //song.loop();
 
   // load background and hero images.
   r = loadImage ("room.png");
@@ -64,6 +65,7 @@ void setup() {
   spriteSheet_monster = loadImage("monster.png");
   health = loadImage ("hud_heartFull.png");
   score = loadImage ("hud_coins.png");
+  bullet = loadImage("bullet.png");
   imageMode(CENTER);
 
   // start the object sprite
@@ -71,15 +73,9 @@ void setup() {
   m_walker = new sprite_monster();
   s_walker = new sprite_seeker();
 
+  // Set screen size
   size(1366, 768);
   surface.setResizable(true);
-  // Clearing the background here is not strictly necessary, as the game loop will do it at the
-  // beginning of each frame anyway.
-  //background(255); // White
-
-  // Setup some other default drawing attributes
-  fill(0);
-  noStroke();
 
   // Initialize the player object
   player = new Player();
@@ -89,19 +85,11 @@ void setup() {
   entities = new LinkedList<PhysObj>();
   entities.add(player); 
   new_entities = new LinkedList<PhysObj>();
-
-  // Initialize elapsed_time to 0. This will mean that the first frame won't move at all,
-  // but that's fine.
   elapsed_time = 0;
 }
 
-// The draw() event handler will be called once per-frame. This takes the place of the body of
-// our game "loop"; the stuff that has to happen every time we need to update the display. Note
-// that Processing defaults to a locked (maximum) framerate of 60 FPS, and also you may drop below 
-// this if you are doing something complicated in your draw() handler.
+// Draw is called repeatedly
 void draw() {
-
-  // draw the background picture r (pre-loaded).
   background(r);
 
   endTime = millis();
@@ -110,9 +98,6 @@ void draw() {
     INPUT_ACCEL = 0.004;
     timeBasedPowerUp = false;
   }
-
-  // Clear the display 
-  //background(255);
 
   // Update all the objects, physically, based on the timestep from the previous frame.
   for (PhysObj o : entities) {
@@ -125,11 +110,11 @@ void draw() {
   }
 
   // Spawn a powerUp at random
-  if (random(0, 1000) <= 1) {
+  if (random(0, 500) <= 1) {
     spawnPowerUp();
   }
 
-  // Spawn an enemy every once in a while
+  // Spawn an enemy every once in a while and a seeker less
   // The higher the level means the more quickly enemies will spawn
   switch(currLevel) {
   case 1:
@@ -138,19 +123,47 @@ void draw() {
     }
     break;
   case 2:
-    if (random(0, 100) <= 1) {
+    if (random(0, 80) <= 1) {
       spawnEnemy();
+      if (random(0, 20) <= 1) {
+        spawnSeeker();
+      }
     }
     break;
   case 3:
-    if (random(0, 50) <= 1) {
+    if (random(0, 60) <= 1) {
       spawnEnemy();
+      if (random(0, 30) <= 1) {
+        spawnSeeker();
+      }
     }
     break;
+  case 4:
+    if (random(0, 50) <= 1) {
+      spawnEnemy();
+      if (random(0, 20) <= 1) {
+        spawnSeeker();
+      }
+    }
+    break;
+  case 5:
+    if (random(0, 40) <= 1) {
+      spawnEnemy();
+      if (random(0, 10) <= 1) {
+        spawnSeeker();
+      }
+      break;
+    }
+  case 6:
+    if (random(0, 40) <= 1) {
+      spawnEnemy();
+      if (random(0, 20) <= 1) {
+        spawnSeeker();
+      }
+    }
   default:
     break;
   }
-
 
   // Purge any dead objects.
   for (Iterator<PhysObj> i = entities.iterator(); i.hasNext(); ) {
@@ -165,32 +178,81 @@ void draw() {
   // Compute the duration of this frame, for use in the next.
   elapsed_time = System.nanoTime() - start_time;
   start_time = System.nanoTime();
-  //println(elapsed_time);
 
+  // During time based power up player moves slower and cannot shoot
+  if (timeBasedPowerUp) {
+    player.canShoot = false;
+    textSize(35);
+    fill(#ffffff);
+    text("ends in "+(1+(int)(startTime/1000+5-endTime/1000)), 300, 110);
+  }
+
+  //------ HUD ------//
+  fill(153, 80);
+  rect(50, 660, 650, 60, 10);
   textSize(20);
   fill(000);
   image(health, 90, 690, width/27, height/20);
   text(player.health, 130, 700);
-  image(score, 250, 690, width/30, height/20);
-  text(player.score, 290, 700);
-  if (timeBasedPowerUp) {
-    textSize(35);
-    fill(#ffffff);
-    text("ends in: "+(int)(startTime/1000+5-endTime/1000), 500, 700);
-  }
+  fill(153, 80);
+  rect(130, 679, 333.3, 25, 7);
+  fill(#d91d1d);
+  rect(130, 679, player.health/3, 25, 7);
+  fill(#ffffff);
+  image(score, 550, 690, width/30, height/20);
+  textSize(40);
+  text(player.score, 590, 705);
 
   PFont font;
   font = createFont("ARCADECLASSIC.TTF", 32);
   textFont(font);
   textSize(20);
   fill(#ffffff);
-  text("Strength level "+player.damage/100, 1000, 100);
-  text("Level "+currLevel, 1200, 100);
+  text("Damage  level ", 900, 100);
 
-  if ((player.score % 100 == 0) && (millis() - t <= 3000)) {
+  // Display for player damage level
+  switch(player.damage) {
+  case 100:
+    image(bullet, 1050, 90);
+    break;
+  case 200:
+    image(bullet, 1050, 90);
+    image(bullet, 1080, 90);
+    break;
+  case 300: 
+    image(bullet, 1050, 90);
+    image(bullet, 1080, 90);
+    image(bullet, 1110, 90);
+    break;
+  case 400:
+    image(bullet, 1050, 90);
+    image(bullet, 1080, 90);
+    image(bullet, 1110, 90);
+    image(bullet, 1140, 90);
+    break;
+  default:
+    break;
+  }
+
+  text("Level ", 1180, 100);
+  textSize(75);
+  text(currLevel, 1250, 113);
+
+  if ((player.score % 100 == 0) && (millis() - t <= 3000) && player.score != 600) {
     textSize(75);
     fill(#ffffff);
     text("LEVEL " + currLevel, width/2-150, height/2);
+  }
+
+  fill(153, 80);
+  rect(880, 60, 430, 60, 10);
+
+  // End of game handling
+  if (player.score >= 1000) {
+    textSize(75);
+    fill(#ffffff);
+    text("YOU WIN", width/2-150, height/2);
+    noLoop();
   }
 
   if (player.health <= 0) {
@@ -202,6 +264,7 @@ void draw() {
   }
 }
 
+// User input handlers
 void keyPressed() {
   switch(keyCode) {
   case 'A':
@@ -255,14 +318,7 @@ void keyPressed() {
       player.shooting = true;
       walker.turn(0);
       break;
-    } 
-
-  case ']':
-    PhysObj s = new Seeker();
-    s.x = width/3;
-    s.y = height/2;
-    spawn(s);
-    break;
+    }
   default: 
     break;
   }
@@ -296,18 +352,38 @@ void keyReleased() {
     break;
   case 'Q':
     exit();
-  case 'B':
+  case 'Z':
     PhysObj tpu = new timeBasedPowerUp();
-    spawn(tpu); break;
-    case 'N':
-      PhysObj ds = new itemDoubleShot();
-      spawn(ds); break;
-    case 'M':
-      PhysObj bs = new itemBigShot();
-      spawn(bs); break;
-    case ',':
-      PhysObj as = new itemAngleShot();
-      spawn(as); break;
+    spawn(tpu); 
+    break;
+  case 'X':
+    PhysObj ds = new itemDoubleShot();
+    spawn(ds); 
+    break;
+  case 'C':
+    PhysObj bs = new itemBigShot();
+    spawn(bs); 
+    break;
+  case 'V':
+    PhysObj as = new itemAngleShot();
+    spawn(as); 
+    break;
+  case 'B':
+    PhysObj hpu = new damagePowerUp();
+    spawn(hpu);
+    break;
+  case 'N':
+    PhysObj dpu = new healthPowerUp();
+    spawn(dpu);
+    break;
+  case 'M':
+    PhysObj rpu = new rangePowerUp();
+    spawn(rpu);
+    break;
+  case ',':
+    PhysObj spu = new shootingSpeedPowerUp();
+    spawn(spu);
+    break;
   default: 
     break;
   }
