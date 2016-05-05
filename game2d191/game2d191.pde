@@ -49,6 +49,9 @@ sprite_seeker s_walker;   // seeker
 
 // Setup function
 void setup() {
+  // Set screen size
+  size(1366, 768, P3D);
+  surface.setResizable(true);
   PFont font;
   font = createFont("ARCADECLASSIC.ttf", 32);
 
@@ -73,10 +76,6 @@ void setup() {
   m_walker = new sprite_monster();
   s_walker = new sprite_seeker();
 
-  // Set screen size
-  size(1366, 768);
-  surface.setResizable(true);
-
   // Initialize the player object
   player = new Player();
   player.x = width/2; 
@@ -89,9 +88,9 @@ void setup() {
 }
 
 // Draw is called repeatedly
-void draw() {
+void draw() {  
   background(r);
-
+  noCursor();
   endTime = millis();
 
   if (endTime - startTime > 5000 && endTime - startTime < 5100) {
