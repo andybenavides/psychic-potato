@@ -109,7 +109,7 @@ void draw() {
   }
 
   // Spawn a powerUp at random
-  if (random(0, 500) <= 1) {
+  if (random(0, 300) <= 1) {
     spawnPowerUp();
   }
 
@@ -117,27 +117,19 @@ void draw() {
   // The higher the level means the more quickly enemies will spawn
   switch(currLevel) {
   case 1:
-    if (random(0, 150) <= 1) {
+    if (random(0, 100) <= 1) {
       spawnEnemy();
     }
     break;
   case 2:
-    if (random(0, 80) <= 1) {
+    if (random(0, 70) <= 1) {
       spawnEnemy();
-      if (random(0, 20) <= 1) {
+      if (random(0, 10) <= 1) {
         spawnSeeker();
       }
     }
     break;
   case 3:
-    if (random(0, 60) <= 1) {
-      spawnEnemy();
-      if (random(0, 30) <= 1) {
-        spawnSeeker();
-      }
-    }
-    break;
-  case 4:
     if (random(0, 50) <= 1) {
       spawnEnemy();
       if (random(0, 20) <= 1) {
@@ -145,8 +137,16 @@ void draw() {
       }
     }
     break;
-  case 5:
+  case 4:
     if (random(0, 40) <= 1) {
+      spawnEnemy();
+      if (random(0, 10) <= 1) {
+        spawnSeeker();
+      }
+    }
+    break;
+  case 5:
+    if (random(0, 30) <= 1) {
       spawnEnemy();
       if (random(0, 10) <= 1) {
         spawnSeeker();
@@ -154,12 +154,23 @@ void draw() {
       break;
     }
   case 6:
-    if (random(0, 40) <= 1) {
+    if (random(0, 20) <= 1) {
       spawnEnemy();
-      if (random(0, 20) <= 1) {
+      if (random(0, 10) <= 1) {
         spawnSeeker();
       }
     }
+    break;
+  case 7:
+  case 8:
+  case 9:
+    if (random(0, 10) <= 1) {
+      spawnEnemy();
+      if (random(0, 5) <=1) {
+        spawnSeeker();
+      }
+    }
+    break;
   default:
     break;
   }
@@ -258,7 +269,7 @@ void draw() {
     player.alive = false;
     textSize(50);
     fill(#ffffff);
-    text("GAME OVER", width/2 - 150, height/2);
+    text("GAME OVER", width/2-150, height/2);
     noLoop();
   }
 }

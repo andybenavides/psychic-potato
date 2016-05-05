@@ -143,9 +143,11 @@ void spawnEnemy() {
   case 4:
     e.vx = 0.20;
     e.vy = 0.20;
+    break;
   case 5:
     e.vx = 0.25;
     e.vy = 0.25;
+    break;
   case 6:
     e.vx = 0.275;
     e.vy = 0.275;
@@ -153,6 +155,7 @@ void spawnEnemy() {
   case 7:
     e.vx = 0.3;
     e.vy = 0.3;
+    break;
   default:
     break;
   } 
